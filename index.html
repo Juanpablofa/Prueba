@@ -28,45 +28,52 @@
 <body>
     <h2>Agregar contacto de ventas</h2>
     
-    <button class="contact-button" onclick="addToContacts()">
+    <button class="contact-button" onclick="downloadVCard()">
         Agregar a Juan (Ventas) a tus contactos
     </button>
 
     <script>
-        function addToContacts() {
-            // Número de teléfono y nombre del contacto
-            const phoneNumber = '9606009111';
-            const contactName = 'Juan Ventas';
+        function downloadVCard() {
+            // Datos del contacto
+            const contact = {
+                firstName: 'Juan',
+                lastName: 'Ventas',
+                phone: '960600911',
+                organization: 'Ventas',
+                note: 'Contacto de ventas'
+            };
+
+            // Crear contenido VCF
+            const vCardContent = [
+                'BEGIN:VCARD',
+                'VERSION:3.0',
+                `FN:${contact.firstName} ${contact.lastName}`,
+                `N:${contact.lastName};${contact.firstName};;;`,
+                `TEL;TYPE=WORK,VOICE:${contact.phone}`,
+                `ORG:${contact.organization}`,
+                `NOTE:${contact.note}`,
+                'END:VCARD'
+            ].join('\n');
+
+            // Crear blob y enlace de descarga
+            const blob = new Blob([vCardContent], { type: 'text/vcard' });
+            const url = URL.createObjectURL(blob);
             
-            // Crear un enlace tel: para dispositivos móviles
-            const telLink = `tel:${phoneNumber}`;
+            // Crear elemento <a> invisible para la descarga
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `${contact.firstName}_${contact.lastName}.vcf`;
             
-            // Intentar usar la API de contactos si está disponible (solo en algunos navegadores)
-            if ('contacts' in navigator && 'ContactsManager' in window) {
-                try {
-                    const contactInfo = {
-                        name: [contactName],
-                        tel: [phoneNumber]
-                    };
-                    
-                    navigator.contacts.select(['name', 'tel'], {multiple: false})
-                        .then(contacts => {
-                            // El usuario habrá seleccionado/modificado el contacto
-                        })
-                        .catch(err => {
-                            // Si falla, usar el método tradicional
-                            window.location.href = telLink;
-                        });
-                } catch (e) {
-                    window.location.href = telLink;
-                }
-            } else {
-                // Método tradicional para la mayoría de dispositivos móviles
-                window.location.href = telLink;
-                
-                // Instrucciones para guardar manualmente
-                alert(`Para guardar el contacto:\n1. Abre la aplicación de teléfono\n2. Busca el número ${phoneNumber}\n3. Selecciona "Guardar como contacto"\n4. Ingresa el nombre "Juan Ventas"`);
-            }
+            // Añadir al documento y hacer clic
+            document.body.appendChild(a);
+            a.click();
+            
+            // Limpiar
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
         }
     </script>
 </body>
