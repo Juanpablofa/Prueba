@@ -1,1 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Contacto</title>
+    <style>
+        .contact-button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .contact-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h2>Agregar contacto de ventas</h2>
+    
+    <button class="contact-button" onclick="addToContacts()">
+        Agregar a Juan (Ventas) a tus contactos
+    </button>
 
+    <script>
+        function addToContacts() {
+            // Número de teléfono y nombre del contacto
+            const phoneNumber = '960600911';
+            const contactName = 'Juan Ventas';
+            
+            // Crear un enlace tel: para dispositivos móviles
+            const telLink = `tel:${phoneNumber}`;
+            
+            // Intentar usar la API de contactos si está disponible (solo en algunos navegadores)
+            if ('contacts' in navigator && 'ContactsManager' in window) {
+                try {
+                    const contactInfo = {
+                        name: [contactName],
+                        tel: [phoneNumber]
+                    };
+                    
+                    navigator.contacts.select(['name', 'tel'], {multiple: false})
+                        .then(contacts => {
+                            // El usuario habrá seleccionado/modificado el contacto
+                        })
+                        .catch(err => {
+                            // Si falla, usar el método tradicional
+                            window.location.href = telLink;
+                        });
+                } catch (e) {
+                    window.location.href = telLink;
+                }
+            } else {
+                // Método tradicional para la mayoría de dispositivos móviles
+                window.location.href = telLink;
+                
+                // Instrucciones para guardar manualmente
+                alert(`Para guardar el contacto:\n1. Abre la aplicación de teléfono\n2. Busca el número ${phoneNumber}\n3. Selecciona "Guardar como contacto"\n4. Ingresa el nombre "Juan Ventas"`);
+            }
+        }
+    </script>
+</body>
+</html>
