@@ -795,166 +795,83 @@
     background-color: #25D366; /* Verde WhatsApp */
 }
 
+/* Estilos para el banner del mes - Agregar en la sección de estilos */
+.month-banner {
+    background: linear-gradient(135deg, #d23369 0%, #E75480 50%, #ff9a9e 100%);
+    color: white;
+    padding: 12px 0;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 4px 12px rgba(210, 51, 105, 0.3);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.month-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    animation: pulse-month 2s infinite;
+}
+
+.month-icon {
+    font-size: 20px;
+    animation: bounce 2s infinite;
+}
+
+.month-text {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.5px;
+}
+
+#current-month {
+    color: #FFD700;
+    text-transform: uppercase;
+    font-weight: 800;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes pulse-month {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-5px);}
+    60% {transform: translateY(-3px);}
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .month-banner {
+        font-size: 14px;
+        padding: 10px 5px;
+    }
+    
+    .month-content {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .month-icon {
+        font-size: 18px;
+    }
+}
+
 </style>
 
 </head>
 
-<script>
-// Sistema de temas variables
-(function() {
-  // Configuración de variables CSS para los temas
-  const style = document.createElement('style');
-  style.textContent = `
-    :root {
-      --color-primary: #d23369;
-      --color-secondary: #FF9A9E;
-      --color-accent: #25D366;
-    }
-    
-    .pulse-effect { animation: pulse 3s infinite; }
-    .float-effect { animation: float 4s ease-in-out infinite; }
-    .shine-effect { 
-      position: relative; 
-      overflow: hidden; 
-    }
-    .shine-effect::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: rgba(255, 255, 255, 0.2);
-      transform: rotate(30deg);
-      animation: shine 3s infinite;
-    }
-    .border-glow { animation: border-glow 2s alternate infinite; }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-    @keyframes shine {
-      0% { transform: translateX(-100%) rotate(30deg); }
-      100% { transform: translateX(100%) rotate(30deg); }
-    }
-    @keyframes border-glow {
-      0% { box-shadow: 0 0 5px var(--color-primary); }
-      100% { box-shadow: 0 0 15px var(--color-primary); }
-    }
-  `;
-  document.head.appendChild(style);
-  
-  // Paletas de colores
-  const colorThemes = [
-    { primary: '#d23369', secondary: '#FF9A9E', accent: '#25D366' },
-    { primary: '#4a6fa5', secondary: '#6c91c0', accent: '#4CAF50' },
-    { primary: '#8e44ad', secondary: '#9b59b6', accent: '#3498db' },
-    { primary: '#c0392b', secondary: '#e74c3c', accent: '#e67e22' },
-    { primary: '#16a085', secondary: '#1abc9c', accent: '#27ae60' }
-  ];
-  
-  // Efectos de animación
-  const animationEffects = ['pulse-effect', 'float-effect', 'shine-effect', 'border-glow'];
-  
-  // Gradientes de fondo
-  const backgroundGradients = [
-    'linear-gradient(to right, #fff9fb, #f8e1e7, #fff9fb)',
-    'linear-gradient(to right, #f5f7fa, #e4e8f0, #f5f7fa)',
-    'linear-gradient(to right, #fdfcfb, #f9f4e6, #fdfcfb)',
-    'linear-gradient(to right, #f0fdf4, #e4f5e8, #f0fdf4)',
-    'linear-gradient(to right, #faf5ff, #f3e8ff, #faf5ff)'
-  ];
-  
-  // Mensajes de bienvenida
-  const welcomeMessages = [
-    "Forever Beauty Descuentos",
-    "Forever Beauty - Tu belleza, nuestro compromiso",
-    "Forever Beauty - Productos que realzan tu naturalidad",
-    "Forever Beauty - Donde encuentras calidad y ahorro",
-    "Forever Beauty - Descubre tu mejor versión"
-  ];
-  
-  // Función para aplicar tema de color
-  function applyColorTheme() {
-    const now = new Date();
-    const themeIndex = now.getDate() % colorThemes.length;
-    const theme = colorThemes[themeIndex];
-    
-    document.documentElement.style.setProperty('--color-primary', theme.primary);
-    document.documentElement.style.setProperty('--color-secondary', theme.secondary);
-    document.documentElement.style.setProperty('--color-accent', theme.accent);
-    
-    // Actualizar elementos específicos
-    document.querySelectorAll('h1, .product-price, .date-range').forEach(el => {
-      el.style.color = theme.primary;
-    });
-    
-    document.querySelectorAll('.promo-banner, .filter-btn.active').forEach(el => {
-      el.style.background = `linear-gradient(to right, ${theme.secondary}, ${theme.primary})`;
-    });
-    
-    document.querySelectorAll('.quick-order, .whatsapp-float').forEach(el => {
-      el.style.background = theme.accent;
-    });
-  }
-  
-  // Función para aplicar efectos aleatorios
-  function applyRandomEffects() {
-    const elements = document.querySelectorAll('.promo-banner, .logo, .product');
-    elements.forEach(el => {
-      // Remover efectos anteriores
-      animationEffects.forEach(effect => el.classList.remove(effect));
-      
-      // Aplicar nuevo efecto aleatorio (50% de probabilidad)
-      if (Math.random() > 0.5) {
-        const randomEffect = animationEffects[Math.floor(Math.random() * animationEffects.length)];
-        el.classList.add(randomEffect);
-      }
-    });
-  }
-  
-  // Función para cambiar gradiente de fondo
-  function changeBackgroundGradient() {
-    const gradient = backgroundGradients[Math.floor(Math.random() * backgroundGradients.length)];
-    document.body.style.backgroundImage = gradient;
-  }
-  
-  // Función para actualizar mensaje de bienvenida
-  function updateWelcomeMessage() {
-    const title = document.getElementById('mainTitle');
-    if (title) {
-      const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
-      title.textContent = randomMessage;
-    }
-  }
-  
-  // Inicializar todos los efectos
-  function initDynamicEffects() {
-    applyColorTheme();
-    applyRandomEffects();
-    changeBackgroundGradient();
-    updateWelcomeMessage();
-    
-    // Programar cambios periódicos
-    setInterval(applyColorTheme, 24 * 60 * 60 * 1000); // Cada 24 horas
-    setInterval(applyRandomEffects, 60 * 60 * 1000);   // Cada hora
-    setInterval(changeBackgroundGradient, 2 * 60 * 60 * 1000); // Cada 2 horas
-    setInterval(updateWelcomeMessage, 6 * 60 * 60 * 1000); // Cada 6 horas
-  }
-  
-  // Ejecutar cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDynamicEffects);
-  } else {
-    initDynamicEffects();
-  }
-})();
-</script>
-
-
 
 <body>
+
+
+
     <h1 id="mainTitle">Forever Beauty Descuentos</h1>
     
     <div class="logo-container">
@@ -988,6 +905,15 @@
         &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp; 
         Envíos a todo Perú &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp; 
         Garantía de calidad
+    </div>
+</div>
+
+<!-- Banner del Mes - Agregar después de <body> -->
+<div class="month-banner" id="month-banner">
+    <div class="month-content">
+        <span class="month-icon">📅</span>
+        <span class="month-text">OFERTAS DE <span id="current-month"></span> | ¡APROVECHA LOS DESCUENTOS!</span>
+        <span class="month-icon">🔥</span>
     </div>
 </div>
 
@@ -1490,6 +1416,22 @@ function renderFeaturedProduct(product) {
     marqueeContainer.appendChild(productElement);
     marqueeContainer.appendChild(cloneElement);
 }
+
+// Función para mostrar el mes actual - Agregar en el script principal
+function updateMonthBanner() {
+    const months = [
+        'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+        'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+    ];
+    
+    const now = new Date();
+    const currentMonth = months[now.getMonth()];
+    
+    document.getElementById('current-month').textContent = currentMonth;
+}
+
+// Llamar a la función al cargar la página - Agregar al final del script
+updateMonthBanner();
 
 
 // Manejar filtros por categoría
@@ -2030,6 +1972,12 @@ updatePromotionalTexts();
         // Cargar productos al iniciar
         loadProducts();
 loadFeaturedProducts(); 
+
+// Asegurar que se ejecute cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    updateMonthBanner();
+    // El resto de tu código de inicialización...
+});
     </script>
 </body>
 </html>
