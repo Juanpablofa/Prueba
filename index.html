@@ -1,1 +1,2735 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistema de Gestión de Gastos del Hogar</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #6a1b9a; /* Morado principal */
+            --secondary-color: #ab47bc; /* Morado claro */
+            --danger-color: #e53935; /* Rojo */
+            --warning-color: #ffb300; /* Amarillo */
+            --success-color: #43a047; /* Verde */
+            --info-color: #0288d1; /* Azul */
+            --light-gray: #f5f5f5;
+            --dark-gray: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --background-color: #f3e5f5; /* Morado pastel claro */
+            --container-bg: rgba(255, 255, 255, 0.9);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0;
+            padding: 10px;
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 50%, #ce93d8 100%);
+            color: var(--dark-gray);
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        .container { 
+            max-width: 100%;
+            margin: 0 auto; 
+            background: var(--container-bg);
+            padding: 15px; 
+            border-radius: var(--border-radius); 
+            box-shadow: var(--box-shadow);
+            backdrop-filter: blur(5px);
+        }
+        
+        h1, h2, h3, h4 {
+            margin-top: 0;
+            color: var(--dark-gray);
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+        }
+        
+        h4 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+            font-size: 0.9rem;
+        }
+        
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        
+        th { 
+            background-color: var(--primary-color); 
+            color: white; 
+            font-weight: 500;
+        }
+        
+        button { 
+            padding: 8px 12px; 
+            margin: 3px;
+            cursor: pointer; 
+            border: none; 
+            border-radius: var(--border-radius); 
+            font-weight: bold; 
+            font-size: 0.9rem;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            color: white; 
+        }
+        
+        .btn-secondary { 
+            background-color: var(--secondary-color); 
+            color: white; 
+        }
+        
+        .btn-danger { 
+            background-color: var(--danger-color); 
+            color: white; 
+        }
+        
+        .btn-warning { 
+            background-color: var(--warning-color); 
+            color: white; 
+        }
+        
+        .btn-success { 
+            background-color: var(--success-color); 
+            color: white; 
+        }
+        
+        .btn-info { 
+            background-color: var(--info-color); 
+            color: white; 
+        }
+        
+        input, select, textarea { 
+            padding: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: var(--border-radius); 
+            width: 100%; 
+            font-size: 0.9rem;
+        }
+        
+        .autocomplete { 
+            position: relative; 
+            display: inline-block; 
+            width: 100%; 
+        }
+        
+        .autocomplete-items { 
+            position: absolute; 
+            border: 1px solid #ddd; 
+            border-bottom: none;
+            border-top: none;
+            z-index: 99; 
+            width: 100%; 
+            max-height: 150px; 
+            overflow-y: auto; 
+            background: white;
+        }
+        
+        .autocomplete-items div { 
+            padding: 8px; 
+            cursor: pointer; 
+            background: white; 
+            border-bottom: 1px solid #eee; 
+            font-size: 0.9rem;
+        }
+        
+        .autocomplete-items div:hover { 
+            background: #f1f1f1; 
+        }
+        
+        .section { 
+            margin-bottom: 20px; 
+            padding: 15px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: var(--border-radius); 
+            background-color: white;
+        }
+        
+        .total-row { 
+            font-weight: bold; 
+            background-color: #f9f9f9; 
+        }
+        
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.7); 
+            overflow-y: auto;
+        }
+        
+        .modal-content { 
+            background-color: #fefefe; 
+            margin: 20px auto; 
+            padding: 15px; 
+            border-radius: var(--border-radius); 
+            width: 95%; 
+            max-width: 800px; 
+            box-shadow: var(--box-shadow); 
+            animation: modalopen 0.3s; 
+        }
+        
+        .close { 
+            color: #aaa; 
+            float: right; 
+            font-size: 24px; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+        
+        .close:hover { 
+            color: black; 
+        }
+        
+        .form-group { 
+            margin-bottom: 12px; 
+        }
+        
+        .form-group label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+            font-size: 0.9rem;
+        }
+        
+        .grid-2 { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .error { 
+            color: var(--danger-color); 
+            font-weight: bold; 
+        }
+        
+        .success { 
+            color: var(--success-color); 
+            font-weight: bold; 
+        }
+        
+        .text-muted { 
+            color: #6c757d; 
+            font-size: 0.8rem; 
+        }
+        
+        .alert { 
+            padding: 8px 12px; 
+            border-radius: var(--border-radius); 
+            margin-bottom: 12px; 
+            font-size: 0.9rem;
+        }
+        
+        .alert-success { 
+            background-color: #d4edda; 
+            color: #155724; 
+        }
+        
+        .alert-danger { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+        }
+        
+        .table-responsive { 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        
+        .button-group button {
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+        
+        .mobile-hidden {
+            display: none;
+        }
 
+        /* Estilos para el dashboard */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            margin-top: 0;
+            color: var(--secondary-color);
+        }
+        
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .period-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .date-group-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .date-group-header td {
+            border-top: 2px solid #ddd;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        /* Colores para tipos de gastos */
+        .tipo-PlazaVea { background-color: #4fc3f7; }
+        .tipo-Restaurant { background-color: #4db6ac; }
+        .tipo-Mass { background-color: #7986cb; }
+        .tipo-Pañales { background-color: #9575cd; }
+        .tipo-Propinas { background-color: #64b5f6; }
+        .tipo-Bodega { background-color: #4dd0e1; }
+        .tipo-Mercado { background-color: #81c784; }
+        .tipo-Gasolina { background-color: #ff8a65; }
+        .tipo-Reparaciones { background-color: #a1887f; }
+        .tipo-Regalos { background-color: #f06292; }
+        .tipo-Cumpleaños { background-color: #ba68c8; }
+        .tipo-Salud { background-color: #e57373; }
+        .tipo-Colegio { background-color: #ffd54f; }
+        .tipo-PresupuestoExcedido { background-color: #ffcdd2; }
+        /* Nuevos tipos de gasto */
+        .tipo-Panaderia { background-color: #a5d6a7; }
+        .tipo-Telefono { background-color: #90caf9; }
+        .tipo-Carne { background-color: #ef9a9a; }
+        .tipo-Gas { background-color: #b39ddb; }
+        .tipo-Netflix { background-color: #f48fb1; }
+	.tipo-TiendasRetail { background-color: #ffab91; } /* Naranja claro */
+        
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+                font-size: 16px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            table {
+                font-size: 1rem;
+            }
+            
+            button {
+                padding: 10px 15px;
+                font-size: 1rem;
+            }
+            
+            input, select, textarea {
+                font-size: 1rem;
+            }
+            
+            .mobile-hidden {
+                display: table-cell;
+            }
+            
+            .modal-content {
+                margin: 5% auto;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            /* Optimización para móviles */
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .stat-card .value {
+                font-size: 1.4rem;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            .period-selector button {
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .date-selector {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .date-selector > div {
+                width: 100%;
+            }
+        }
+        
+        @keyframes modalopen {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--border-radius);
+            z-index: 1001;
+            box-shadow: var(--box-shadow);
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            display: none;
+            max-width: 90%;
+            text-align: center;
+        }
+        
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 20px; opacity: 1;}
+        }
+        
+        @keyframes fadeout {
+            from {bottom: 20px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+
+/* Agregar esto en la sección de estilos */
+#topCategoriesTable {
+    margin-top: 20px;
+}
+
+#topCategoriesTable th {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#topCategoriesTable tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Gestión de Gastos del Hogar</h1>
+        
+        <div class="button-group">
+            <button onclick="openImportModal()" class="btn-secondary">📥 Importar Excel</button>
+            <button type="button" class="btn-primary" onclick="generateExcel()">📤 Exportar Excel</button>
+            <button onclick="resetDatabase()" class="btn-danger">🧹 Limpiar BD</button>
+            <button onclick="showAdminModal()" class="btn-warning">⚙️ Panel Admin</button>
+            <button onclick="showDashboard()" class="btn-info">📊 Dashboard</button>
+            <button onclick="showMainView()" class="btn-success">🏠 Inicio</button>
+        </div>
+        
+        <!-- Sección de Dashboard -->
+        <div id="dashboardSection" class="section" style="display: none;">
+            <h2>📊 Dashboard de Gastos</h2>
+            
+            <div class="period-selector">
+                <button onclick="updateDashboard('day')" class="btn-primary">Día</button>
+                <button onclick="updateDashboard('week')" class="btn-primary">Semana</button>
+                <button onclick="updateDashboard('month')" class="btn-primary">Mes</button>
+                <button onclick="updateDashboard('year')" class="btn-primary">Año</button>
+                <button onclick="updateDashboard('all')" class="btn-primary">Todo</button>
+            </div>
+            
+            <div class="date-selector" id="dateSelectorContainer" style="display: none;">
+                <div id="daySelector" style="display: none;">
+                    <label for="specificDay">Seleccionar día:</label>
+                    <input type="date" id="specificDay" onchange="updateSpecificPeriod('day')">
+                </div>
+                <div id="weekSelector" style="display: none;">
+                    <label for="specificWeek">Seleccionar semana:</label>
+                    <input type="week" id="specificWeek" onchange="updateSpecificPeriod('week')">
+                </div>
+                <div id="monthSelector" style="display: none;">
+                    <label for="specificMonth">Seleccionar mes:</label>
+                    <input type="month" id="specificMonth" onchange="updateSpecificPeriod('month')">
+                </div>
+                <div id="yearSelector" style="display: none;">
+                    <label for="specificYear">Seleccionar año:</label>
+                    <select id="specificYear" onchange="updateSpecificPeriod('year')"></select>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Gastos Totales</h3>
+                    <div class="value" id="totalExpensesStat">$0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Gastos Registrados</h3>
+                    <div class="value" id="totalPurchasesStat">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Categorías Usadas</h3>
+                    <div class="value" id="totalSuppliersStat">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Gasto Promedio</h3>
+                    <div class="value" id="avgExpenseStat">$0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Gasto Máximo</h3>
+                    <div class="value" id="maxExpenseStat">$0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Gasto Mínimo</h3>
+                    <div class="value" id="minExpenseStat">$0</div>
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="chart-container">
+                    <canvas id="expensesChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="expensesByCategoryChart"></canvas>
+                </div>
+            </div>
+            
+           <h3>🏆 Top 10 Gastos (Mayor a Menor)</h3>
+<div class="table-responsive">
+    <table id="topSuppliersTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Categoría</th>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Observaciones</th>
+            </tr>
+        </thead>
+        <tbody id="topSuppliersBody"></tbody>
+    </table>
+</div>
+
+<h3>🏆 Top 10 Categorías (Mayor Gasto)</h3>
+<div class="table-responsive">
+    <table id="topCategoriesTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Categoría</th>
+                <th>Total Gastado</th>
+                <th>Cantidad</th>
+                <th>Promedio</th>
+            </tr>
+        </thead>
+        <tbody id="topCategoriesBody"></tbody>
+    </table>
+</div>
+        </div>
+
+
+
+
+        <!-- Sección principal (formulario y lista de gastos) -->
+        <div id="mainSection">
+            <div class="section">
+                <h2>➕ Nuevo Gasto</h2>
+                <form id="purchaseForm">
+                    <input type="hidden" id="editingPurchaseId" value="">
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="fechaEmision">Fecha de Gasto:</label>
+                            <input type="date" id="fechaEmision" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tipoGasto">Tipo de Gasto:</label>
+                            <select id="tipoGasto" required>
+                                <option value="">Seleccione tipo</option>
+                                <option value="PlazaVea">Plaza Vea</option>
+                                <option value="Restaurant">Restaurant</option>
+                                <option value="Mass">Mass</option>
+                                <option value="Pañales">Pañales</option>
+                                <option value="Propinas">Propinas</option>
+                                <option value="Bodega">Bodega</option>
+                                <option value="Mercado">Mercado</option>
+                                <option value="Gasolina">Gasolina</option>
+                                <option value="Reparaciones">Reparaciones</option>
+                                <option value="Regalos">Regalos</option>
+                                <option value="Cumpleaños">Cumpleaños</option>
+                                <option value="Salud">Salud</option>
+                                <option value="Colegio">Colegio</option>
+                                <!-- Nuevos tipos de gasto -->
+                                <option value="Panaderia">Panadería</option>
+                                <option value="Telefono">Teléfono</option>
+                                <option value="Carne">Carne</option>
+                                <option value="Gas">Gas</option>
+                                <option value="Netflix">Netflix</option>
+				<option value="TiendasRetail">Tiendas Retail</option>
+                                <!-- Opción para agregar nuevos tipos -->
+                                <option value="nuevo">➕ Agregar nuevo tipo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="nuevoTipoContainer" style="display: none;">
+                        <label for="nuevoTipo">Nuevo tipo de gasto:</label>
+                        <input type="text" id="nuevoTipo" placeholder="Ingrese el nuevo tipo de gasto">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="monto">Monto Total:</label>
+                        <input type="number" id="monto" min="0" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="descripcion">Observaciones:</label>
+                        <textarea id="descripcion" rows="2" placeholder="Detalles del gasto"></textarea>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="button" class="btn-primary" onclick="savePurchase()">💾 Guardar</button>
+                        <button type="button" class="btn-warning" onclick="cancelEdit()" id="cancelEditBtn" style="display:none;">✖ Cancelar</button>
+                        <button type="reset" class="btn-danger">♻️ Limpiar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="section">
+                <h2>📋 Gastos Registrados</h2>
+
+                <div class="button-group" style="margin-bottom: 15px;">
+                    <button onclick="filterPurchases('today')" class="btn-primary">Hoy</button>
+                    <button onclick="filterPurchases('week')" class="btn-primary">Esta Semana</button>
+                    <button onclick="filterPurchases('month')" class="btn-primary">Este Mes</button>
+                    <button onclick="filterPurchases('all')" class="btn-primary">Todos</button>
+                    <input type="date" id="filterDate" onchange="filterPurchases('custom')" style="max-width: 150px;">
+                </div>
+
+                <div class="table-responsive">
+                    <table id="purchasesTable">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th class="mobile-hidden">Tipo</th>
+                                <th>Monto</th>
+                                <th>Observaciones</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchasesBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal para importar datos -->
+        <div id="importModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('importModal')">&times;</span>
+                <h2>📤 Importar Datos desde Excel</h2>
+                <div class="section">
+                    <div class="form-group">
+                        <label for="excelFile">Seleccionar archivo Excel:</label>
+                        <input type="file" id="excelFile" accept=".xlsx, .xls" class="form-control">
+                        <small class="text-muted">Formato requerido: XLSX o XLS</small>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="btnPreview" class="btn-secondary" onclick="previewExcelData()">👁️ Previsualizar</button>
+                        <button id="btnTemplate" class="btn-secondary" onclick="downloadPurchaseTemplate()">📝 Descargar Plantilla</button>
+                        <button id="btnImport" class="btn-primary" onclick="importExcelData()" disabled>📥 Importar</button>
+                    </div>
+                    
+                    <div id="previewSection" style="margin-top:15px; display:none;">
+                        <h4>Vista previa:</h4>
+                        <div id="excelPreview" class="table-responsive"></div>
+                    </div>
+                    
+                    <div id="importResults"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Administración -->
+        <div id="adminModal" class="modal">
+            <div class="modal-content" style="max-width: 800px;">
+                <span class="close" onclick="closeModal('adminModal')">&times;</span>
+                <h2>Panel de Administración</h2>
+                
+                <div class="grid-2">
+                    <div class="section">
+                        <h3>📊 Estadísticas</h3>
+                        <div id="statsContainer">
+                            <p><strong>Categorías:</strong> <span id="supplierCount">0</span></p>
+                            <p><strong>Gastos:</strong> <span id="purchaseCount">0</span></p>
+                            <p><strong>Total Gastado:</strong> $<span id="totalExpenses">0.00</span></p>
+                            <p><strong>Última Actualización:</strong> <span id="lastUpdate"></span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>💾 Backup/Restauración</h3>
+                        <div class="form-group">
+                            <button class="btn-secondary" onclick="exportBackup()">📥 Exportar Backup</button>
+                            <small class="text-muted">Guarda un archivo JSON con todos los datos</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="backupFile">Restaurar desde archivo:</label>
+                            <input type="file" id="backupFile" accept=".json">
+                            <button class="btn-primary" onclick="importBackup()">📤 Restaurar Backup</button>
+                            <small class="text-muted">Reemplazará todos los datos actuales</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>🧹 Limpieza Selectiva</h3>
+                    <div class="form-group">
+                        <button class="btn-danger" onclick="clearSelectedData()">🗑️ Limpiar Todos los Datos</button>
+                        <small class="text-muted">¡Esta acción no se puede deshacer!</small>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>🔍 Vista de Datos</h3>
+                    <div class="form-group">
+                        <select id="dataViewSelector" class="form-control">
+                            <option value="compras">Gastos</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="dataViewTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Detalles</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataViewBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toast notification -->
+        <div id="toast" class="toast"></div>
+
+        <script>
+            // Configuración de IndexedDB
+            const DB_NAME = 'GastosHogarDB';
+            const DB_VERSION = 1;
+            let db;
+            
+            // Variables para los gráficos
+            let expensesChart = null;
+            let expensesByCategoryChart = null;
+            let currentPeriod = 'month';
+            let currentSpecificDate = null;
+            
+            // Inicializar IndexedDB
+            function initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    
+                    request.onerror = function(event) {
+                        console.error("Error al abrir la base de datos:", event.target.error);
+                        reject("Error al abrir la base de datos");
+                    };
+                    
+                    request.onsuccess = function(event) {
+                        db = event.target.result;
+                        resolve(db);
+                    };
+                    
+                    request.onupgradeneeded = function(event) {
+                        const db = event.target.result;
+                        
+                        // Solo necesitamos el object store para compras (gastos)
+                        if (!db.objectStoreNames.contains('compras')) {
+                            const comprasStore = db.createObjectStore('compras', { keyPath: 'id', autoIncrement: true });
+                            comprasStore.createIndex('fechaEmision', 'fechaEmision', { unique: false });
+                            comprasStore.createIndex('tipoGasto', 'tipoGasto', { unique: false });
+                        }
+                    };
+                });
+            }
+            
+            // Funciones genéricas para operaciones con IndexedDB
+            function getAllFromStore(storeName) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = () => resolve(request.result || []);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            
+            function addToStore(storeName, item) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.add(item);
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            
+            function updateInStore(storeName, item) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put(item);
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            
+            function deleteFromStore(storeName, id) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.delete(id);
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            
+            function clearStore(storeName) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.clear();
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+
+            // ========== FUNCIONES DEL DASHBOARD ========== //
+
+            function showDashboard() {
+                document.getElementById('dashboardSection').style.display = 'block';
+                document.getElementById('mainSection').style.display = 'none';
+                
+                // Inicializar selectores de fecha específica
+                initDateSelectors();
+                updateDashboard(currentPeriod);
+            }
+
+            function showMainView() {
+                document.getElementById('dashboardSection').style.display = 'none';
+                document.getElementById('mainSection').style.display = 'block';
+                refreshPurchasesView();
+            }
+
+            function initDateSelectors() {
+                // Inicializar selector de años
+                const yearSelect = document.getElementById('specificYear');
+                yearSelect.innerHTML = '';
+                
+                const currentYear = new Date().getFullYear();
+                for (let year = currentYear; year >= currentYear - 5; year--) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    yearSelect.appendChild(option);
+                }
+                
+                // Establecer valores por defecto
+                const today = new Date();
+                document.getElementById('specificDay').value = today.toISOString().split('T')[0];
+                
+                const weekNumber = getWeekNumber(today);
+                document.getElementById('specificWeek').value = `${today.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+                
+                document.getElementById('specificMonth').value = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+            }
+            
+            function getWeekNumber(date) {
+                const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+                const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+                return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+            }
+
+        function updateDashboard(period, specificDate = null) {
+    currentPeriod = period;
+    currentSpecificDate = specificDate || null;
+    
+    // Mostrar/ocultar selectores de fecha específica
+    document.getElementById('dateSelectorContainer').style.display = 'none';
+    document.getElementById('daySelector').style.display = 'none';
+    document.getElementById('weekSelector').style.display = 'none';
+    document.getElementById('monthSelector').style.display = 'none';
+    document.getElementById('yearSelector').style.display = 'none';
+    
+    if (period === 'day') {
+        document.getElementById('dateSelectorContainer').style.display = 'flex';
+        document.getElementById('daySelector').style.display = 'block';
+    } else if (period === 'week') {
+        document.getElementById('dateSelectorContainer').style.display = 'flex';
+        document.getElementById('weekSelector').style.display = 'block';
+    } else if (period === 'month') {
+        document.getElementById('dateSelectorContainer').style.display = 'flex';
+        document.getElementById('monthSelector').style.display = 'block';
+    } else if (period === 'year') {
+        document.getElementById('dateSelectorContainer').style.display = 'flex';
+        document.getElementById('yearSelector').style.display = 'block';
+    }
+    
+    updateExpensesChart(period, specificDate);
+    updateExpensesByCategoryChart(period, specificDate);
+    updateStats(period, specificDate);
+    updateTopExpenses(period, specificDate);  // Actualiza Top 10 Gastos
+    updateTopCategories(period, specificDate); // Actualiza Top 10 Categorías
+}
+
+function updateTopExpenses(period, specificDate = null) {
+    const now = specificDate || new Date();
+    let filteredCompras = [];
+    
+    const transaction = db.transaction(['compras'], 'readonly');
+    const store = transaction.objectStore('compras');
+    const request = store.getAll();
+    
+    request.onsuccess = function() {
+        const compras = request.result || [];
+        
+        // Filtrar por período
+        if (period === 'day') {
+            const dayStart = new Date(now);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(dayStart);
+            dayEnd.setDate(dayStart.getDate() + 1);
+            
+            filteredCompras = compras.filter(p => {
+                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                return purchaseDate >= dayStart && purchaseDate < dayEnd;
+            });
+        }
+        else if (period === 'week') {
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            
+            filteredCompras = compras.filter(p => {
+                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                return purchaseDate >= startOfWeek && purchaseDate <= endOfWeek;
+            });
+        } 
+        else if (period === 'month') {
+            filteredCompras = compras.filter(p => {
+                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                return purchaseDate.getMonth() === now.getMonth() && 
+                       purchaseDate.getFullYear() === now.getFullYear();
+            });
+        } 
+        else if (period === 'year') {
+            filteredCompras = compras.filter(p => {
+                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                return purchaseDate.getFullYear() === now.getFullYear();
+            });
+        } 
+        else {
+            filteredCompras = [...compras];
+        }
+        
+        // Ordenar por monto (de mayor a menor) y tomar los 10 primeros
+        const topExpenses = [...filteredCompras]
+            .sort((a, b) => parseFloat(b.monto) - parseFloat(a.monto))
+            .slice(0, 10);
+        
+        // Mostrar en la tabla
+        const tbody = document.getElementById('topSuppliersBody');
+        tbody.innerHTML = '';
+        
+        topExpenses.forEach((compra, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td class="tipo-${compra.tipoGasto}">${compra.tipoGasto}</td>
+                <td>${compra.fechaEmision}</td>
+                <td>$${parseFloat(compra.monto).toFixed(2)}</td>
+                <td>${compra.descripcion || ''}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    };
+}
+            
+            function updateSpecificPeriod(period) {
+    currentPeriod = period;
+    
+    if (period === 'day') {
+        const dayInput = document.getElementById('specificDay').value;
+        if (dayInput) {
+            const [year, month, day] = dayInput.split('-');
+            currentSpecificDate = new Date(year, month - 1, day);
+            currentSpecificDate.setHours(0, 0, 0, 0);
+            updateDashboard(period, currentSpecificDate);
+        }
+    } else if (period === 'week') {
+        const weekInput = document.getElementById('specificWeek').value;
+        if (weekInput) {
+            const [year, week] = weekInput.split('-W');
+            currentSpecificDate = getDateOfWeek(parseInt(week), parseInt(year));
+            updateDashboard(period, currentSpecificDate);
+        }
+    } else if (period === 'month') {
+        const monthInput = document.getElementById('specificMonth').value;
+        if (monthInput) {
+            const [year, month] = monthInput.split('-');
+            currentSpecificDate = new Date(year, parseInt(month) - 1, 1);
+            updateDashboard(period, currentSpecificDate);
+        }
+    } else if (period === 'year') {
+        const yearInput = document.getElementById('specificYear').value;
+        if (yearInput) {
+            currentSpecificDate = new Date(yearInput, 0, 1);
+            updateDashboard(period, currentSpecificDate);
+        }
+    }
+}
+    
+            
+            function getDateOfWeek(week, year) {
+                const simple = new Date(year, 0, 1 + (week - 1) * 7);
+                const dow = simple.getDay();
+                const ISOweekStart = simple;
+                if (dow <= 4)
+                    ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+                else
+                    ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+                return ISOweekStart;
+            }
+
+            function updateExpensesChart(period, specificDate = null) {
+                const ctx = document.getElementById('expensesChart').getContext('2d');
+                
+                getExpensesDataByPeriod(period, specificDate).then(({ labels, data }) => {
+                    if (expensesChart) {
+                        expensesChart.destroy();
+                    }
+                    
+                    expensesChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Gastos por $',
+                                data: data,
+                                backgroundColor: 'rgba(106, 27, 154, 0.5)',
+                                borderColor: 'rgba(106, 27, 154, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Gastos por Periodo',
+                                    font: {
+                                        size: 16
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            function updateExpensesByCategoryChart(period, specificDate = null) {
+                const ctx = document.getElementById('expensesByCategoryChart').getContext('2d');
+                
+                getExpensesByCategory(period, specificDate).then(({ labels, data, colors }) => {
+                    if (expensesByCategoryChart) {
+                        expensesByCategoryChart.destroy();
+                    }
+                    
+                    expensesByCategoryChart = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: colors,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Gastos por Categoría',
+                                    font: {
+                                        size: 16
+                                    }
+                                },
+                                legend: {
+                                    position: 'right'
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            function getExpensesDataByPeriod(period, specificDate = null) {
+                return new Promise((resolve) => {
+                    const now = specificDate || new Date();
+                    let labels = [];
+                    let data = [];
+                    
+                    const transaction = db.transaction(['compras'], 'readonly');
+                    const store = transaction.objectStore('compras');
+                    const request = store.getAll();
+                    
+                    request.onsuccess = function() {
+                        const compras = request.result || [];
+                        
+                        if (period === 'day') {
+                            // Horas del día específico
+                            labels = [];
+                            data = Array(24).fill(0);
+                            
+                            for (let i = 0; i < 24; i++) {
+                                labels.push(`${i}:00`);
+                            }
+                            
+                            compras.forEach(compra => {
+                                const compraDate = new Date(compra.fechaEmisionCompleta);
+                                const compraDay = new Date(compraDate);
+                                compraDay.setHours(0, 0, 0, 0);
+                                
+                                if (compraDay.getTime() === now.getTime()) {
+                                    const hour = compraDate.getHours();
+                                    data[hour] += parseFloat(compra.monto);
+                                }
+                            });
+                        }
+                        else if (period === 'week') {
+                            // Días de la semana específica
+                            labels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+                            data = Array(7).fill(0);
+                            
+                            const startOfWeek = new Date(now);
+                            startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); // Lunes
+                            
+                            for (let i = 0; i < 7; i++) {
+                                const day = new Date(startOfWeek);
+                                day.setDate(startOfWeek.getDate() + i);
+                                
+                                compras.forEach(compra => {
+                                    const compraDate = new Date(compra.fechaEmisionCompleta);
+                                    if (compraDate.toDateString() === day.toDateString()) {
+                                        data[i] += parseFloat(compra.monto);
+                                    }
+                                });
+                            }
+                        } 
+                        else if (period === 'month') {
+                            // Semanas del mes específico
+                            labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
+                            data = [0, 0, 0, 0, 0];
+                            
+                            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                            const totalDays = lastDay.getDate();
+                            
+                            compras.forEach(compra => {
+                                const compraDate = new Date(compra.fechaEmisionCompleta);
+                                if (compraDate.getMonth() === now.getMonth() && 
+                                    compraDate.getFullYear() === now.getFullYear()) {
+                                    const week = Math.floor((compraDate.getDate() + firstDay.getDay() - 1) / 7);
+                                    if (week < 5) {
+                                        data[week] += parseFloat(compra.monto);
+                                    }
+                                }
+                            });
+                        } 
+                        else if (period === 'year') {
+                            // Meses del año específico
+                            labels = [];
+                            data = Array(12).fill(0);
+                            
+                            for (let i = 0; i < 12; i++) {
+                                const monthName = new Date(now.getFullYear(), i, 1).toLocaleDateString('es-ES', { month: 'short' });
+                                labels.push(monthName);
+                                
+                                compras.forEach(compra => {
+                                    const compraDate = new Date(compra.fechaEmisionCompleta);
+                                    if (compraDate.getMonth() === i && 
+                                        compraDate.getFullYear() === now.getFullYear()) {
+                                        data[i] += parseFloat(compra.monto);
+                                    }
+                                });
+                            }
+                        } 
+                        else {
+                            // Todos los datos agrupados por mes
+                            const allMonths = {};
+                            
+                            compras.forEach(compra => {
+                                const date = new Date(compra.fechaEmisionCompleta);
+                                const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                                
+                                if (!allMonths[monthYear]) {
+                                    allMonths[monthYear] = 0;
+                                }
+                                allMonths[monthYear] += parseFloat(compra.monto);
+                            });
+                            
+                            labels = Object.keys(allMonths).sort().map(month => {
+                                const [year, m] = month.split('-');
+                                return new Date(year, m-1).toLocaleDateString('es-ES', { year: 'numeric', month: 'short' });
+                            });
+                            
+                            data = Object.entries(allMonths)
+                                .sort((a, b) => a[0].localeCompare(b[0]))
+                                .map(([_, total]) => total);
+                        }
+                        
+                        resolve({ labels, data });
+                    };
+                });
+            }
+
+            function getExpensesByCategory(period, specificDate = null) {
+                return new Promise((resolve) => {
+                    const now = specificDate || new Date();
+                    const categoryStats = {};
+                    
+                    const transaction = db.transaction(['compras'], 'readonly');
+                    const store = transaction.objectStore('compras');
+                    const request = store.getAll();
+                    
+                    request.onsuccess = function() {
+                        const compras = request.result || [];
+                        
+                        // Filtrar por período si es necesario
+                        let filteredCompras = compras;
+                        if (specificDate) {
+                            filteredCompras = compras.filter(c => {
+                                const compraDate = new Date(c.fechaEmisionCompleta);
+                                
+                                if (period === 'day') {
+                                    return compraDate.getDate() === now.getDate() && 
+                                           compraDate.getMonth() === now.getMonth() && 
+                                           compraDate.getFullYear() === now.getFullYear();
+                                } else if (period === 'week') {
+                                    const startOfWeek = new Date(now);
+                                    startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+                                    const endOfWeek = new Date(startOfWeek);
+                                    endOfWeek.setDate(startOfWeek.getDate() + 6);
+                                    return compraDate >= startOfWeek && compraDate <= endOfWeek;
+                                } else if (period === 'month') {
+                                    return compraDate.getMonth() === now.getMonth() && 
+                                           compraDate.getFullYear() === now.getFullYear();
+                                } else if (period === 'year') {
+                                    return compraDate.getFullYear() === now.getFullYear();
+                                }
+                                return true;
+                            });
+                        }
+                        
+                        filteredCompras.forEach(compra => {
+                            if (!categoryStats[compra.tipoGasto]) {
+                                categoryStats[compra.tipoGasto] = 0;
+                            }
+                            categoryStats[compra.tipoGasto] += parseFloat(compra.monto);
+                        });
+                        
+                        // Ordenar por monto descendente
+                        const sortedCategories = Object.entries(categoryStats)
+                            .sort((a, b) => b[1] - a[1]);
+                        
+                        const labels = sortedCategories.map(([name]) => name);
+                        const data = sortedCategories.map(([_, total]) => total);
+                        
+                        // Colores para cada categoría
+                        const colors = labels.map(label => {
+                            const colorMap = {
+                                'PlazaVea': '#4fc3f7',
+                                'Restaurant': '#4db6ac',
+                                'Mass': '#7986cb',
+                                'Pañales': '#9575cd',
+                                'Propinas': '#64b5f6',
+                                'Bodega': '#4dd0e1',
+                                'Mercado': '#81c784',
+                                'Gasolina': '#ff8a65',
+                                'Reparaciones': '#a1887f',
+                                'Regalos': '#f06292',
+                                'Cumpleaños': '#ba68c8',
+                                'Salud': '#e57373',
+                                'Colegio': '#ffd54f',
+                                'Panaderia': '#a5d6a7',
+                                'Telefono': '#90caf9',
+                                'Carne': '#ef9a9a',
+                                'Gas': '#b39ddb',
+                                'Netflix': '#f48fb1',
+				 'TiendasRetail': '#ffab91' // Nueva categoría
+                            };
+                            return colorMap[label] || getRandomColor();
+                        });
+
+                        function getRandomColor() {
+                            const letters = '0123456789ABCDEF';
+                            let color = '#';
+                            for (let i = 0; i < 6; i++) {
+                                color += letters[Math.floor(Math.random() * 16)];
+                            }
+                            return color;
+                        }
+                        
+                        resolve({ labels, data, colors });
+                    };
+                });
+            }
+
+            function updateStats(period, specificDate = null) {
+                calculateStats(period, specificDate).then(({ 
+                    totalExpenses, 
+                    totalPurchases, 
+                    avgExpense,
+                    maxExpense,
+                    minExpense,
+                    uniqueCategories
+                }) => {
+                    document.getElementById('totalExpensesStat').textContent = `$${totalExpenses.toFixed(2)}`;
+                    document.getElementById('totalPurchasesStat').textContent = totalPurchases;
+                    document.getElementById('totalSuppliersStat').textContent = uniqueCategories;
+                    document.getElementById('avgExpenseStat').textContent = `$${avgExpense.toFixed(2)}`;
+                    document.getElementById('maxExpenseStat').textContent = `$${maxExpense.toFixed(2)}`;
+                    document.getElementById('minExpenseStat').textContent = `$${minExpense.toFixed(2)}`;
+                });
+            }
+
+            function calculateStats(period, specificDate = null) {
+                return new Promise((resolve) => {
+                    const now = specificDate || new Date();
+                    let filteredPurchases = [];
+                    
+                    const transaction = db.transaction(['compras'], 'readonly');
+                    const store = transaction.objectStore('compras');
+                    const request = store.getAll();
+                    
+                    request.onsuccess = function() {
+                        const allPurchases = request.result || [];
+                        
+                        // Filtrado por período
+                        if (period === 'day') {
+                            const dayStart = new Date(now);
+                            dayStart.setHours(0, 0, 0, 0);
+                            const dayEnd = new Date(dayStart);
+                            dayEnd.setDate(dayStart.getDate() + 1);
+                            
+                            filteredPurchases = allPurchases.filter(p => {
+                                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                                return purchaseDate >= dayStart && purchaseDate < dayEnd;
+                            });
+                        }
+                        else if (period === 'week') {
+                            const startOfWeek = new Date(now);
+                            startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+                            const endOfWeek = new Date(startOfWeek);
+                            endOfWeek.setDate(startOfWeek.getDate() + 6);
+                            
+                            filteredPurchases = allPurchases.filter(p => {
+                                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                                return purchaseDate >= startOfWeek && purchaseDate <= endOfWeek;
+                            });
+                        } 
+                        else if (period === 'month') {
+                            filteredPurchases = allPurchases.filter(p => {
+                                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                                return purchaseDate.getMonth() === now.getMonth() && 
+                                       purchaseDate.getFullYear() === now.getFullYear();
+                            });
+                        } 
+                        else if (period === 'year') {
+                            filteredPurchases = allPurchases.filter(p => {
+                                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                                return purchaseDate.getFullYear() === now.getFullYear();
+                            });
+                        } 
+                        else {
+                            filteredPurchases = [...allPurchases];
+                        }
+                        
+                        // Cálculos estadísticos
+                        const totalExpenses = filteredPurchases.reduce((sum, p) => sum + parseFloat(p.monto), 0);
+                        const totalPurchases = filteredPurchases.length;
+                        const avgExpense = totalPurchases > 0 ? totalExpenses / totalPurchases : 0;
+                        
+                        // Encontrar gasto máximo y mínimo
+                        let maxExpense = 0;
+                        let minExpense = 0;
+                        if (filteredPurchases.length > 0) {
+                            maxExpense = Math.max(...filteredPurchases.map(p => parseFloat(p.monto)));
+                            minExpense = Math.min(...filteredPurchases.map(p => parseFloat(p.monto)));
+                        }
+                        
+                        // Categorías únicas
+                        const uniqueCategories = new Set(filteredPurchases.map(p => p.tipoGasto)).size;
+                        
+                        resolve({ 
+                            totalExpenses, 
+                            totalPurchases, 
+                            avgExpense,
+                            maxExpense,
+                            minExpense,
+                            uniqueCategories
+                        });
+                    };
+                });
+            }
+
+            function updateTopCategories() {
+                const categoryStats = {};
+                
+                const transaction = db.transaction(['compras'], 'readonly');
+                const store = transaction.objectStore('compras');
+                const request = store.getAll();
+                
+                request.onsuccess = function() {
+                    const compras = request.result || [];
+                    
+                    // Filtrar por período si es necesario
+                    let filteredCompras = compras;
+                    if (currentSpecificDate) {
+                        const now = currentSpecificDate;
+                        filteredCompras = compras.filter(c => {
+                            const compraDate = new Date(c.fechaEmisionCompleta);
+                            
+                            if (currentPeriod === 'day') {
+                                return compraDate.getDate() === now.getDate() && 
+                                       compraDate.getMonth() === now.getMonth() && 
+                                       compraDate.getFullYear() === now.getFullYear();
+                            } else if (currentPeriod === 'week') {
+                                const startOfWeek = new Date(now);
+                                startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+                                const endOfWeek = new Date(startOfWeek);
+                                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                                return compraDate >= startOfWeek && compraDate <= endOfWeek;
+                            } else if (currentPeriod === 'month') {
+                                return compraDate.getMonth() === now.getMonth() && 
+                                       compraDate.getFullYear() === now.getFullYear();
+                            } else if (currentPeriod === 'year') {
+                                return compraDate.getFullYear() === now.getFullYear();
+                            }
+                            return true;
+                        });
+                    }
+                    
+                    filteredCompras.forEach(compra => {
+                        if (!categoryStats[compra.tipoGasto]) {
+                            categoryStats[compra.tipoGasto] = {
+                                count: 0,
+                                total: 0
+                            };
+                        }
+                        
+                        categoryStats[compra.tipoGasto].count++;
+                        categoryStats[compra.tipoGasto].total += parseFloat(compra.monto);
+                    });
+                    
+                    const sortedCategories = Object.entries(categoryStats)
+                        .sort((a, b) => b[1].total - a[1].total)
+                        .slice(0,10);
+                    
+                    const tbody = document.getElementById('topSuppliersBody');
+                    tbody.innerHTML = '';
+                    
+                    sortedCategories.forEach(([name, stats]) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${name}</td>
+                            <td>${stats.count}</td>
+                            <td>$${stats.total.toFixed(2)}</td>
+                        `;
+                        tbody.appendChild(row);
+                      });
+                };
+            }
+
+function updateTopCategories(period, specificDate = null) {
+    const now = specificDate || new Date();
+    const categoryStats = {};
+    
+    const transaction = db.transaction(['compras'], 'readonly');
+    const store = transaction.objectStore('compras');
+    const request = store.getAll();
+    
+    request.onsuccess = function() {
+        const compras = request.result || [];
+        
+        // Filtrar por período si es necesario
+        let filteredCompras = compras;
+        if (period !== 'all') {
+            filteredCompras = compras.filter(c => {
+                const compraDate = new Date(c.fechaEmisionCompleta);
+                
+                if (period === 'day') {
+                    return compraDate.getDate() === now.getDate() && 
+                           compraDate.getMonth() === now.getMonth() && 
+                           compraDate.getFullYear() === now.getFullYear();
+                } else if (period === 'week') {
+                    const startOfWeek = new Date(now);
+                    startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+                    const endOfWeek = new Date(startOfWeek);
+                    endOfWeek.setDate(startOfWeek.getDate() + 6);
+                    return compraDate >= startOfWeek && compraDate <= endOfWeek;
+                } else if (period === 'month') {
+                    return compraDate.getMonth() === now.getMonth() && 
+                           compraDate.getFullYear() === now.getFullYear();
+                } else if (period === 'year') {
+                    return compraDate.getFullYear() === now.getFullYear();
+                }
+                return true;
+            });
+        }
+        
+        // Calcular estadísticas por categoría
+        filteredCompras.forEach(compra => {
+            if (!categoryStats[compra.tipoGasto]) {
+                categoryStats[compra.tipoGasto] = {
+                    total: 0,
+                    count: 0
+                };
+            }
+            
+            categoryStats[compra.tipoGasto].total += parseFloat(compra.monto);
+            categoryStats[compra.tipoGasto].count++;
+        });
+        
+        // Ordenar por total gastado (de mayor a menor) y tomar las 10 primeras
+        const sortedCategories = Object.entries(categoryStats)
+            .sort((a, b) => b[1].total - a[1].total)
+            .slice(0, 10);
+        
+        // Mostrar en la tabla
+        const tbody = document.getElementById('topCategoriesBody');
+        tbody.innerHTML = '';
+        
+        sortedCategories.forEach(([name, stats], index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td class="tipo-${name}">${name}</td>
+                <td>$${stats.total.toFixed(2)}</td>
+                <td>${stats.count}</td>
+                <td>$${(stats.total / stats.count).toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    };
+}
+
+
+
+            // ========== FUNCIONES DE IMPORTACIÓN/EXPORTACIÓN ========== //
+
+            function openImportModal() {
+                document.getElementById('importModal').style.display = 'block';
+                document.getElementById('previewSection').style.display = 'none';
+                document.getElementById('btnImport').disabled = true;
+                document.getElementById('importResults').innerHTML = '';
+                document.getElementById('excelFile').value = '';
+            }
+
+            function previewExcelData() {
+                const file = document.getElementById('excelFile').files[0];
+                
+                if (!file) {
+                    showToast("⚠️ Por favor seleccione un archivo", 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    // Mostrar vista previa
+                    let html = `<table class="table-bordered" style="width:100%"><thead><tr>`;
+                    
+                    // Cabeceras
+                    if (jsonData.length > 0) {
+                        Object.keys(jsonData[0]).forEach(key => {
+                            html += `<th>${key}</th>`;
+                        });
+                        html += `</tr></thead><tbody>`;
+                        
+                        // Primeras 5 filas
+                        jsonData.slice(0, 15).forEach(row => {
+                            html += `<tr>`;
+                            Object.values(row).forEach(val => {
+                                html += `<td>${val || ''}</td>`;
+                            });
+                            html += `</tr>`;
+                        });
+                    }
+                    
+                    html += `</tbody></table>`;
+                    html += `<p>Mostrando ${Math.min(5, jsonData.length)} de ${jsonData.length} registros</p>`;
+                    
+                    document.getElementById('excelPreview').innerHTML = html;
+                    document.getElementById('previewSection').style.display = 'block';
+                    document.getElementById('btnImport').disabled = false;
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            function importExcelData() {
+                const file = document.getElementById('excelFile').files[0];
+                
+                if (!file) {
+                    showToast("⚠️ Por favor seleccione un archivo", 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+                        
+                        let successCount = 0;
+                        let errorCount = 0;
+                        let errorMessages = [];
+
+                        // Obtener el último ID de compra para generar nuevos IDs
+                        getAllFromStore('compras').then(existingPurchases => {
+                            const maxId = existingPurchases.length > 0 ? 
+                                Math.max(...existingPurchases.map(p => p.id)) + 1 : 1;
+                            
+                            const importPromises = jsonData.map((item, index) => {
+                                return new Promise((resolve, reject) => {
+                                    try {
+                                        // Validaciones básicas
+                                        if (!item['TipoGasto'] && !item['tipoGasto']) {
+                                            throw new Error("Falta tipo de gasto");
+                                        }
+                                        
+                                        if (!item['Monto'] && !item['monto']) {
+                                            throw new Error("Falta monto del gasto");
+                                        }
+
+                                        const nuevoId = maxId + index;
+                                        const tipoGasto = (item['TipoGasto'] || item['tipoGasto'] || "").toString().trim();
+                                        const monto = parseFloat(item['Monto'] || item['monto'] || 0);
+                                        const descripcion = (item['Observaciones'] || item['observaciones'] || item['Descripción'] || item['descripcion'] || "").toString().trim();
+                                        
+                                        // Manejo de fechas
+                                        let fechaEmision = item['Fecha Emisión'] || item['fechaEmision'] || item['Fecha'];
+                                        
+                                        let fechaEmisionDate;
+                                        
+                                        // Procesar fecha de emisión
+                                        if (fechaEmision) {
+                                            try {
+                                                if (typeof fechaEmision === 'number') {
+                                                    // Fecha como número de Excel
+                                                    const date = XLSX.SSF.parse_date_code(fechaEmision);
+                                                    fechaEmisionDate = new Date(date.y, date.m - 1, date.d);
+                                                } else {
+                                                    // Intentar parsear como fecha
+                                                    fechaEmisionDate = new Date(fechaEmision);
+                                                    if (isNaN(fechaEmisionDate.getTime())) {
+                                                        // Si falla, intentar formato dd/mm/yyyy
+                                                        const parts = fechaEmision.toString().split('/');
+                                                        if (parts.length === 3) {
+                                                            fechaEmisionDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                if (isNaN(fechaEmisionDate.getTime())) {
+                                                    throw new Error("Fecha de emisión inválida");
+                                                }
+                                            } catch (e) {
+                                                console.warn("Fecha de emisión inválida, usando fecha actual:", e);
+                                                fechaEmisionDate = new Date();
+                                            }
+                                        } else {
+                                            fechaEmisionDate = new Date();
+                                        }
+                                        
+                                        // Formatear fecha legible
+                                        const fechaEmisionFormateada = fechaEmisionDate.toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: '2-digit',
+                                            day: '2-digit'
+                                        }).replace(/\//g, '-');
+                                        
+                                        // Crear el gasto
+                                        const nuevoGasto = {
+                                            id: nuevoId,
+                                            tipoGasto,
+                                            monto: monto.toFixed(2),
+                                            descripcion,
+                                            fechaEmision: fechaEmisionFormateada,
+                                            fechaEmisionCompleta: fechaEmisionDate.toISOString()
+                                        };
+                                        
+                                        // Guardar el gasto en IndexedDB
+                                        addToStore('compras', nuevoGasto)
+                                            .then(() => {
+                                                successCount++;
+                                                resolve();
+                                            })
+                                            .catch(error => {
+                                                errorCount++;
+                                                errorMessages.push(`Fila ${index + 2}: ${error.message}`);
+                                                console.error(`Error al importar gasto (fila ${index + 2}):`, error);
+                                                reject(error);
+                                            });
+                                    } catch (e) {
+                                        errorCount++;
+                                        errorMessages.push(`Fila ${index + 2}: ${e.message}`);
+                                        console.error(`Error al importar gasto (fila ${index + 2}):`, e);
+                                        reject(e);
+                                    }
+                                });
+                            });
+
+                            Promise.all(importPromises)
+                                .then(() => {
+                                    // Mostrar resultados
+                                    let resultHTML = `<div class="alert alert-success">
+                                        ✅ Importación completada: ${successCount} registros importados</div>`;
+                                    
+                                    if (errorCount > 0) {
+                                        resultHTML += `<div class="alert alert-danger">
+                                            ❌ ${errorCount} errores:<br>${errorMessages.join('<br>')}</div>`;
+                                    }
+                                    
+                                    document.getElementById('importResults').innerHTML = resultHTML;
+                                    
+                                    // Actualizar vistas
+                                    refreshPurchasesView();
+                                    updateDashboard(currentPeriod);
+                                })
+                                .catch(error => {
+                                    console.error("Error en la importación:", error);
+                                });
+                        });
+                    } catch (error) {
+                        console.error("Error general al importar:", error);
+                        document.getElementById('importResults').innerHTML = `
+                            <div class="alert alert-danger">
+                                ❌ Error al procesar el archivo: ${error.message}
+                            </div>`;
+                    }
+                };
+                
+                reader.onerror = function() {
+                    document.getElementById('importResults').innerHTML = `
+                        <div class="alert alert-danger">
+                            ❌ Error al leer el archivo
+                        </div>`;
+                };
+                
+                reader.readAsArrayBuffer(file);
+            }
+
+            function downloadPurchaseTemplate() {
+                const templateData = [
+                    ["TipoGasto", "Monto", "Observaciones", "Fecha Emisión"],
+                    ["PlazaVea", "150.50", "Compra del supermercado", "01-01-2023"],
+                    ["Restaurant", "80.00", "Cena familiar", "05-02-2023"]
+                ];
+                
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(templateData);
+                XLSX.utils.book_append_sheet(wb, ws, "PlantillaGastos");
+                XLSX.writeFile(wb, "Plantilla_Gastos.xlsx");
+            }
+
+            function generateExcel() {
+                getAllFromStore('compras').then(compras => {
+                    if (compras.length === 0) {
+                        showToast("⚠️ No hay gastos registrados", 'error');
+                        return;
+                    }
+
+                    const wb = XLSX.utils.book_new();
+                    
+                    // Hoja de resumen
+                    const summaryData = [
+                        ["Resumen de Gastos"],
+                        [],
+                        ["ID", "Fecha", "Tipo de Gasto", "Monto", "Observaciones"]
+                    ];
+
+                    compras.forEach(compra => {
+                        summaryData.push([
+                            compra.id,
+                            compra.fechaEmision,
+                            compra.tipoGasto,
+                            compra.monto,
+                            compra.descripcion || ''
+                        ]);
+                    });
+
+                    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+                    XLSX.utils.book_append_sheet(wb, wsSummary, "Resumen");
+
+                    // Hojas por gasto
+                    compras.forEach(compra => {
+                        const compraData = [
+                            ["Detalles del Gasto"],
+                            ["ID:", compra.id],
+                            ["Fecha:", compra.fechaEmision],
+                            ["Tipo de Gasto:", compra.tipoGasto],
+                            ["Monto:", compra.monto],
+                            ["Observaciones:", compra.descripcion || ''],
+                        ];
+
+                        const wsCompra = XLSX.utils.aoa_to_sheet(compraData);
+                        XLSX.utils.book_append_sheet(wb, wsCompra, `Gasto ${compra.id}`);
+                    });
+
+                    XLSX.writeFile(wb, `Gastos_Hogar_${new Date().toISOString().split('T')[0]}.xlsx`);
+                    showToast("✅ Archivo Excel generado correctamente", 'success');
+                });
+            }
+
+            // ========== FUNCIONES DEL PANEL ADMINISTRATIVO ========== //
+
+            function showAdminModal() {
+                updateAdminStats();
+                loadDataView();
+                document.getElementById('adminModal').style.display = 'block';
+            }
+            
+            function updateAdminStats() {
+                getAllFromStore('compras').then(compras => {
+                    document.getElementById('purchaseCount').textContent = compras.length;
+                    
+                    const totalExpenses = compras.reduce((sum, compra) => sum + parseFloat(compra.monto), 0);
+                    document.getElementById('totalExpenses').textContent = totalExpenses.toFixed(2);
+                    
+                    // Contar categorías únicas
+                    const uniqueCategories = new Set(compras.map(c => c.tipoGasto)).size;
+                    document.getElementById('supplierCount').textContent = uniqueCategories;
+                    
+                    updateLastModified();
+                });
+            }
+            
+            function loadDataView() {
+                const type = document.getElementById('dataViewSelector').value;
+                const tbody = document.getElementById('dataViewBody');
+                tbody.innerHTML = '';
+                
+                getAllFromStore(type).then(data => {
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        
+                        // Columna ID
+                        const idCell = document.createElement('td');
+                        idCell.textContent = item.id;
+                        row.appendChild(idCell);
+                        
+                        // Columna Detalles
+                        const detailsCell = document.createElement('td');
+                        detailsCell.style.maxWidth = '300px';
+                        detailsCell.style.overflow = 'hidden';
+                        detailsCell.style.textOverflow = 'ellipsis';
+                        detailsCell.style.whiteSpace = 'nowrap';
+                        
+                        if (type === 'compras') {
+                            detailsCell.textContent = `${item.fechaEmision} - ${item.tipoGasto} - $${item.monto}`;
+                            detailsCell.title = `Observaciones: ${item.descripcion || 'Ninguna'}`;
+                        }
+                        
+                        row.appendChild(detailsCell);
+                        
+                        // Columna Acciones
+                        const actionsCell = document.createElement('td');
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'btn-danger';
+                        deleteBtn.textContent = '❌';
+                        deleteBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            deleteItem(type, item.id);
+                        };
+                        actionsCell.appendChild(deleteBtn);
+                        row.appendChild(actionsCell);
+                        
+                        tbody.appendChild(row);
+                    });
+                });
+            }
+            
+            function deleteItem(type, id) {
+                if (!confirm(`¿Está seguro de eliminar este gasto?`)) {
+                    return;
+                }
+                
+                deleteFromStore(type, id)
+                    .then(() => {
+                        updateAdminStats();
+                        loadDataView();
+                        refreshPurchasesView();
+                        showToast(`✅ Gasto eliminado`, 'success');
+                    })
+                    .catch(error => {
+                        console.error("Error al eliminar:", error);
+                        showToast("⚠️ Error al eliminar", 'error');
+                    });
+            }
+            
+            function exportBackup() {
+                getAllFromStore('compras').then(compras => {
+                    const backupData = {
+                        compras,
+                        fechaBackup: new Date().toISOString(),
+                        versionSistema: '1.0'
+                    };
+                    
+                    const dataStr = JSON.stringify(backupData, null, 2);
+                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                    
+                    const exportName = `backup_gastos_${new Date().toISOString().split('T')[0]}.json`;
+                    
+                    const linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', dataUri);
+                    linkElement.setAttribute('download', exportName);
+                    linkElement.click();
+                    
+                    showToast("✅ Backup exportado correctamente", 'success');
+                });
+            }
+            
+            function importBackup() {
+                const fileInput = document.getElementById('backupFile');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    showToast("⚠️ Seleccione un archivo de backup", 'error');
+                    return;
+                }
+                
+                if (!confirm("¿Está seguro de restaurar este backup? Todos los datos actuales serán reemplazados.")) {
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const backupData = JSON.parse(e.target.result);
+                        // Validación básica:
+                        if (!backupData.compras || !Array.isArray(backupData.compras)) {
+                            throw new Error("El archivo no contiene datos válidos de gastos");
+                        }
+                        // Verifica que los campos obligatorios estén en cada gasto:
+                        const isValid = backupData.compras.every(compra => 
+                            compra.tipoGasto && compra.monto && compra.fechaEmision
+                        );
+                        if (!isValid) {
+                            throw new Error("Estructura de datos incompleta");
+                        }
+                                
+                        // Limpiar las bases de datos existentes
+                        clearStore('compras').then(() => {
+                            // Importar los nuevos datos
+                            const purchasePromises = backupData.compras.map(c => addToStore('compras', c));
+                            
+                            return Promise.all(purchasePromises);
+                        }).then(() => {
+                            refreshPurchasesView();
+                            updateAdminStats();
+                            loadDataView();
+                            showToast("✅ Backup restaurado correctamente", 'success');
+                        }).catch(error => {
+                            console.error("Error al importar backup:", error);
+                            showToast("⚠️ Error al importar backup: " + error.message, 'error');
+                        });
+                    } catch (error) {
+                        console.error("Error al importar backup:", error);
+                        showToast("⚠️ Error al importar backup: " + error.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+            
+            function clearSelectedData() {
+                if (!confirm("¿ESTÁ SEGURO? Esta acción eliminará permanentemente todos los datos.")) {
+                    return;
+                }
+                
+                clearStore('compras')
+                    .then(() => {
+                        refreshPurchasesView();
+                        updateAdminStats();
+                        loadDataView();
+                        showToast("✅ Datos limpiados correctamente", 'success');
+                    })
+                    .catch(error => {
+                        console.error("Error al limpiar datos:", error);
+                        showToast("⚠️ Error al limpiar datos", 'error');
+                    });
+            }
+
+            // ========== FUNCIONES BÁSICAS DEL SISTEMA ========== //
+
+            function savePurchase() {
+                // Validar campos requeridos
+                let tipoGasto = document.getElementById('tipoGasto').value.trim();
+                const monto = parseFloat(document.getElementById('monto').value);
+                const fechaEmisionInput = document.getElementById('fechaEmision').value;
+
+                if (monto <= 0) {
+                    showToast("⚠️ El monto debe ser mayor a cero", 'error');
+                    document.getElementById('monto').focus();
+                    return;
+                }
+
+                // Manejar nuevo tipo de gasto
+                if (tipoGasto === 'nuevo') {
+                    tipoGasto = document.getElementById('nuevoTipo').value.trim();
+                    if (!tipoGasto) {
+                        showToast("⚠️ Por favor ingrese el nuevo tipo de gasto", 'error');
+                        document.getElementById('nuevoTipo').focus();
+                        return;
+                    }
+                }
+                
+                if (!tipoGasto) {
+                    showToast("⚠️ Por favor seleccione el tipo de gasto", 'error');
+                    document.getElementById('tipoGasto').focus();
+                    return;
+                }
+                
+                if (isNaN(monto)) {
+                    showToast("⚠️ Por favor ingrese un monto válido", 'error');
+                    document.getElementById('monto').focus();
+                    return;
+                }
+                
+                if (!fechaEmisionInput) {
+                    showToast("⚠️ Por favor ingrese la fecha de gasto", 'error');
+                    document.getElementById('fechaEmision').focus();
+                    return;
+                }
+                
+                // Procesar fechas
+                const [year, month, day] = fechaEmisionInput.split('-');
+                const fechaEmision = new Date(year, month - 1, day);
+                fechaEmision.setHours(12, 0, 0, 0); // Establecer hora del mediodía para evitar cambios de día
+                
+                const fechaEmisionFormateada = fechaEmision.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).replace(/\//g, '-');
+                
+                // Obtener otros campos
+                const descripcion = document.getElementById('descripcion').value.trim();
+
+                // Verificar si estamos editando un gasto existente
+                const editingPurchaseId = document.getElementById('editingPurchaseId').value;
+                
+                if (editingPurchaseId) {
+                    // Actualizar gasto existente
+                    updatePurchase(
+                        editingPurchaseId,
+                        tipoGasto,
+                        monto,
+                        descripcion,
+                        fechaEmisionFormateada,
+                        fechaEmision.toISOString()
+                    );
+                } else {
+                    // Crear nuevo gasto
+                    createNewPurchase(
+                        tipoGasto,
+                        monto,
+                        descripcion,
+                        fechaEmisionFormateada,
+                        fechaEmision.toISOString()
+                    );
+                    verificarPresupuesto(tipoGasto, monto);
+                }
+            }
+
+            function updatePurchase(id, tipoGasto, monto, descripcion, fechaEmision, fechaEmisionCompleta) {
+                const transaction = db.transaction(['compras'], 'readwrite');
+                const store = transaction.objectStore('compras');
+                const getRequest = store.get(parseInt(id));
+                
+                getRequest.onsuccess = function() {
+                    const compra = getRequest.result;
+                    if (!compra) {
+                        showToast("⚠️ Gasto no encontrado", 'error');
+                        return;
+                    }
+                    
+                    const updatedCompra = {
+                        ...compra,
+                        tipoGasto,
+                        monto: monto.toFixed(2),
+                        descripcion,
+                        fechaEmision,
+                        fechaEmisionCompleta
+                    };
+                    
+                    const updateRequest = store.put(updatedCompra);
+                    
+                    updateRequest.onsuccess = function() {
+                        document.getElementById('purchaseForm').reset();
+                        document.getElementById('editingPurchaseId').value = '';
+                        document.getElementById('cancelEditBtn').style.display = 'none';
+                        
+                        if (document.getElementById('dashboardSection').style.display === 'block') {
+                            updateDashboard(currentPeriod);
+                        }
+                        
+                        refreshPurchasesView();
+                        showToast(`✅ Gasto #${id} actualizado correctamente`, 'success');
+                    };
+                    
+                    updateRequest.onerror = function(event) {
+                        console.error("Error al actualizar gasto:", event.target.error);
+                        showToast("⚠️ Error al actualizar gasto", 'error');
+                    };
+                };
+                
+                getRequest.onerror = function(event) {
+                    console.error("Error al obtener gasto:", event.target.error);
+                    showToast("⚠️ Error al obtener gasto", 'error');
+                };
+            }
+
+            function createNewPurchase(tipoGasto, monto, descripcion, fechaEmision, fechaEmisionCompleta) {
+                const nuevaCompra = {
+                    tipoGasto,
+                    monto: monto.toFixed(2),
+                    descripcion,
+                    fechaEmision,
+                    fechaEmisionCompleta
+                };
+
+                addToStore('compras', nuevaCompra)
+                    .then(id => {
+                        document.getElementById('purchaseForm').reset();
+                        if (document.getElementById('dashboardSection').style.display === 'block') {
+                            updateDashboard(currentPeriod);
+                        }
+                        refreshPurchasesView();
+                        showToast(`✅ Gasto #${id} guardado correctamente`, 'success');
+                    })
+                    .catch(error => {
+                        console.error("Error al guardar gasto:", error);
+                        showToast("⚠️ Error al guardar gasto", 'error');
+                    });
+            }
+
+            function editPurchase(compraId) {
+                const transaction = db.transaction(['compras'], 'readonly');
+                const store = transaction.objectStore('compras');
+                const request = store.get(parseInt(compraId));
+                
+                request.onsuccess = function() {
+                    const compra = request.result;
+                    if (!compra) {
+                        showToast("⚠️ Gasto no encontrado", 'error');
+                        return;
+                    }
+
+                    // Llenar el formulario con los datos del gasto
+                    document.getElementById('tipoGasto').value = compra.tipoGasto;
+                    document.getElementById('monto').value = compra.monto;
+                    document.getElementById('descripcion').value = compra.descripcion || '';
+
+                    // Convertir fechas al formato de input date (YYYY-MM-DD)
+                    const fechaEmision = new Date(compra.fechaEmisionCompleta);
+                    fechaEmision.setMinutes(fechaEmision.getMinutes() + fechaEmision.getTimezoneOffset());
+                    document.getElementById('fechaEmision').value = fechaEmision.toISOString().split('T')[0];
+                    
+                    document.getElementById('editingPurchaseId').value = compra.id;
+                    
+                    // Mostrar botón de cancelar edición
+                    document.getElementById('cancelEditBtn').style.display = 'inline-block';
+                    
+                    // Desplazarse al formulario
+                    document.getElementById('purchaseForm').scrollIntoView({ behavior: 'smooth' });
+                    
+                    showToast(`✏️ Editando gasto #${compraId}`, 'info');
+                };
+                
+                request.onerror = function(event) {
+                    console.error("Error al obtener gasto:", event.target.error);
+                    showToast("⚠️ Error al obtener gasto", 'error');
+                };
+            }
+
+            function cancelEdit() {
+                document.getElementById('purchaseForm').reset();
+                document.getElementById('editingPurchaseId').value = '';
+                document.getElementById('cancelEditBtn').style.display = 'none';
+                showToast("✖ Edición cancelada", 'info');
+            }
+            
+            function refreshPurchasesView() {
+                const tbody = document.getElementById('purchasesBody');
+                tbody.innerHTML = '';
+
+                getAllFromStore('compras').then(compras => {
+                    // Ordenar por fecha (más reciente primero)
+                    const comprasOrdenadas = [...compras].sort((a, b) => 
+                        new Date(b.fechaEmisionCompleta) - new Date(a.fechaEmisionCompleta));
+                    
+                    let currentDateGroup = '';
+                    
+                    comprasOrdenadas.forEach(compra => {
+                        const compraDate = new Date(compra.fechaEmisionCompleta);
+                        const dateGroup = compraDate.toLocaleDateString('es-ES', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        }).replace(/\b\w/g, l => l.toUpperCase());
+                        
+                        // Agregar separador de fecha si cambió
+                        if (dateGroup !== currentDateGroup) {
+                            currentDateGroup = dateGroup;
+                            const dateRow = document.createElement('tr');
+                            dateRow.className = 'date-group-header';
+                            dateRow.innerHTML = `
+                                <td colspan="5" style="
+                                    background-color: #f0f0f0;
+                                    font-weight: bold;
+                                    padding: 10px;
+                                    font-size: 1.1em;
+                                ">
+                                    📅 ${dateGroup}
+                                </td>
+                            `;
+                            tbody.appendChild(dateRow);
+                        }
+                        
+                        // Fila del gasto
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${compra.fechaEmision}</td>
+                            <td class="mobile-hidden tipo-${compra.tipoGasto}">${compra.tipoGasto}</td>
+                            <td>$${compra.monto}</td>
+                            <td>${compra.descripcion || ''}</td>
+                            <td>
+                                <button class="btn-primary" onclick="viewPurchaseDetails(${compra.id})">👁️</button>
+                                <button class="btn-secondary" onclick="editPurchase(${compra.id})">✏️</button>
+                                <button class="btn-danger" onclick="deletePurchase(${compra.id})">❌</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                });
+            }
+            
+            function viewPurchaseDetails(compraId) {
+                const transaction = db.transaction(['compras'], 'readonly');
+                const store = transaction.objectStore('compras');
+                const request = store.get(parseInt(compraId));
+                
+                request.onsuccess = function() {
+                    const compra = request.result;
+                    if (!compra) {
+                        showToast("⚠️ Gasto no encontrado", 'error');
+                        return;
+                    }
+
+                    let detalles = `📅 Fecha: ${compra.fechaEmision}\n`;
+                    detalles += `🏷️ Tipo: ${compra.tipoGasto}\n`;
+                    detalles += `💰 Monto: $${compra.monto}\n`;
+                    if (compra.descripcion) detalles += `📝 Observaciones: ${compra.descripcion}\n`;
+
+                    const modalContent = `
+                        <div class="modal-content" style="max-width: 600px;">
+                            <span class="close" onclick="closeModal('detailsModal')">&times;</span>
+                            <h2>Detalles del Gasto #${compra.id}</h2>
+                            <div class="section" style="white-space: pre-line; margin-bottom: 20px;">${detalles}</div>
+                            <div class="button-group">
+                                <button class="btn-secondary" onclick="copyToClipboard(\`${detalles.replace(/`/g, '\\`')}\`)">📋 Copiar</button>
+                                <button class="btn-primary" onclick="closeModal('detailsModal')">Cerrar</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    showCustomModal(modalContent, 'detailsModal');
+                };
+                
+                request.onerror = function(event) {
+                    console.error("Error al obtener gasto:", event.target.error);
+                    showToast("⚠️ Error al obtener gasto", 'error');
+                };
+            }
+
+            function deletePurchase(compraId) {
+                if (confirm("¿Está seguro de eliminar este gasto?")) {
+                    deleteFromStore('compras', parseInt(compraId))
+                        .then(() => {
+                            refreshPurchasesView();
+                            
+                            // Actualizar dashboard si está visible
+                            if (document.getElementById('dashboardSection').style.display === 'block') {
+                                updateDashboard(currentPeriod);
+                            }
+                            
+                            showToast("✅ Gasto eliminado correctamente", 'success');
+                        })
+                        .catch(error => {
+                            console.error("Error al eliminar gasto:", error);
+                            showToast("⚠️ Error al eliminar gasto", 'error');
+                        });
+                }
+            }
+
+            function resetDatabase() {
+                if (confirm("⚠️ ¿ESTÁS SEGURO? Esto borrará TODOS los gastos de forma permanente.")) {
+                    clearStore('compras')
+                        .then(() => {
+                            // Actualizar la vista
+                            refreshPurchasesView();
+                            
+                            // Actualizar dashboard si está visible
+                            if (document.getElementById('dashboardSection').style.display === 'block') {
+                                updateDashboard(currentPeriod);
+                            }
+                            
+                            showToast("✅ Base de datos reiniciada completamente", 'success');
+                        }).catch(error => {
+                            console.error("Error al reiniciar base de datos:", error);
+                            showToast("⚠️ Error al reiniciar base de datos", 'error');
+                        });
+                }
+            }
+
+            function filterPurchases(range) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const filterDate = document.getElementById('filterDate');
+                
+                getAllFromStore('compras').then(compras => {
+                    let filtered = compras;
+                    
+                    switch(range) {
+                        case 'today':
+                            filtered = compras.filter(c => {
+                                const compraDate = new Date(c.fechaEmisionCompleta);
+                                return compraDate >= today;
+                            });
+                            break;
+                            
+                        case 'week':
+                            const startOfWeek = new Date(today);
+                            startOfWeek.setDate(today.getDate() - today.getDay());
+                            filtered = compras.filter(c => {
+                                const compraDate = new Date(c.fechaEmisionCompleta);
+                                return compraDate >= startOfWeek;
+                            });
+                            break;
+                            
+                        case 'month':
+                            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                            filtered = compras.filter(c => {
+                                const compraDate = new Date(c.fechaEmisionCompleta);
+                                return compraDate >= startOfMonth;
+                            });
+                            break;
+                            
+                        case 'custom':
+                            const customDate = new Date(filterDate.value);
+                            if (isNaN(customDate.getTime())) return;
+                            
+                            const nextDay = new Date(customDate);
+                            nextDay.setDate(customDate.getDate() + 1);
+                            
+                            filtered = compras.filter(c => {
+                                const compraDate = new Date(c.fechaEmisionCompleta);
+                                return compraDate >= customDate && compraDate < nextDay;
+                            });
+                            break;
+                    }
+                    
+                    // Mostrar resultados filtrados
+                    const tbody = document.getElementById('purchasesBody');
+                    tbody.innerHTML = '';
+                    
+                    let currentDateGroup = '';
+                    
+                    filtered.sort((a, b) => new Date(b.fechaEmisionCompleta) - new Date(a.fechaEmisionCompleta))
+                        .forEach(compra => {
+                            const compraDate = new Date(compra.fechaEmisionCompleta);
+                            const dateGroup = compraDate.toLocaleDateString('es-ES', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            }).replace(/\b\w/g, l => l.toUpperCase());
+                            
+                            if (dateGroup !== currentDateGroup) {
+                                currentDateGroup = dateGroup;
+                                const dateRow = document.createElement('tr');
+                                dateRow.className = 'date-group-header';
+                                dateRow.innerHTML = `
+                                    <td colspan="5" style="
+                                        background-color: #f0f0f0;
+                                        font-weight: bold;
+                                        padding: 10px;
+                                        font-size: 1.1em;
+                                    ">
+                                        📅 ${dateGroup}
+                                    </td>
+                                `;
+                                tbody.appendChild(dateRow);
+                            }
+                            
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${compra.fechaEmision}</td>
+                                <td class="mobile-hidden tipo-${compra.tipoGasto}">${compra.tipoGasto}</td>
+                                <td>$${compra.monto}</td>
+                                <td>${compra.descripcion || ''}</td>
+                                <td>
+                                    <button class="btn-primary" onclick="viewPurchaseDetails(${compra.id})">👁️</button>
+                                    <button class="btn-secondary" onclick="editPurchase(${compra.id})">✏️</button>
+                                    <button class="btn-danger" onclick="deletePurchase(${compra.id})">❌</button>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                });
+            }         
+
+            // ========== FUNCIONES AUXILIARES ========== //
+
+            function updateLastModified() {
+                const now = new Date();
+                document.getElementById('lastUpdate').textContent = now.toLocaleString();
+            }
+
+            function showToast(message, type = 'info') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.style.display = 'block';
+                toast.style.backgroundColor = type === 'error' ? 'var(--danger-color)' : 
+                                             type === 'success' ? 'var(--success-color)' : '#333';
+                
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+            }
+
+            function closeModal(modalId) {
+                document.getElementById(modalId).style.display = 'none';
+            }
+
+            function showCustomModal(content, modalId = 'customModal') {
+                let modal = document.getElementById(modalId);
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = modalId;
+                    modal.className = 'modal';
+                    document.body.appendChild(modal);
+                }
+                modal.innerHTML = content;
+                modal.style.display = 'block';
+            }
+
+            function copyToClipboard(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(text)
+                            .then(() => showToast("✅ Copiado al portapapeles", 'success'))
+                            .catch(() => fallbackCopy(textarea));
+                    } else {
+                        fallbackCopy(textarea);
+                    }
+                } catch (err) {
+                    console.error("Error al copiar:", err);
+                    showToast("⚠️ Seleccione el texto y copie manualmente", 'error');
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+
+function updatePurchasesList(period, specificDate = null) {
+    const now = specificDate || new Date();
+    let filteredCompras = [];
+    
+    const transaction = db.transaction(['compras'], 'readonly');
+    const store = transaction.objectStore('compras');
+    const request = store.getAll();
+    
+    request.onsuccess = function() {
+        const compras = request.result || [];
+        
+        // Filtrar por período
+        if (period === 'day') {
+            const dayStart = new Date(now);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(dayStart);
+            dayEnd.setDate(dayStart.getDate() + 1);
+            
+            filteredCompras = compras.filter(p => {
+                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                return purchaseDate >= dayStart && purchaseDate < dayEnd;
+            });
+        }
+        else if (period === 'week') {
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            
+            filteredCompras = compras.filter(p => {
+                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                return purchaseDate >= startOfWeek && purchaseDate <= endOfWeek;
+            });
+        } 
+        else if (period === 'month') {
+            filteredCompras = compras.filter(p => {
+                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                return purchaseDate.getMonth() === now.getMonth() && 
+                       purchaseDate.getFullYear() === now.getFullYear();
+            });
+        } 
+        else if (period === 'year') {
+            filteredCompras = compras.filter(p => {
+                const purchaseDate = new Date(p.fechaEmisionCompleta);
+                return purchaseDate.getFullYear() === now.getFullYear();
+            });
+        } 
+        else {
+            filteredCompras = [...compras];
+        }
+        
+        // Ordenar por monto (de mayor a menor) y tomar los 10 primeros
+        const topExpenses = [...filteredCompras]
+            .sort((a, b) => parseFloat(b.monto) - parseFloat(a.monto))
+            .slice(0, 10);
+        
+        // Mostrar en la tabla
+        const tbody = document.getElementById('topSuppliersBody');
+        tbody.innerHTML = '';
+        
+        topExpenses.forEach((compra, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td class="tipo-${compra.tipoGasto}">${compra.tipoGasto}</td>
+                <td>${compra.fechaEmision}</td>
+                <td>$${parseFloat(compra.monto).toFixed(2)}</td>
+                <td>${compra.descripcion || ''}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    };
+}
+
+
+            function fallbackCopy(textarea) {
+                try {
+                    const successful = document.execCommand('copy');
+                    if (!successful) throw new Error('Falló execCommand');
+                    showToast("✅ Copiado al portapapeles", 'success');
+                } catch (err) {
+                    console.error("Error con execCommand:", err);
+                    showToast("⚠️ Pulse Ctrl+C para copiar", 'error');
+                    textarea.select();
+                }
+            }
+
+            const presupuestos = {
+                PlazaVea: 1000,
+                Restaurant: 500,
+                Mass: 300,
+                Pañales: 200,
+                Propinas: 150,
+                Bodega: 400,
+                Mercado: 800,
+                Gasolina: 600,
+                Reparaciones: 300,
+                Regalos: 200,
+                Cumpleaños: 300,
+                Salud: 500,
+                Colegio: 700,
+                Panaderia: 150,
+                Telefono: 200,
+                Carne: 400,
+                Gas: 250,
+                Netflix: 50,
+		TiendasRetail: 600 // Nuevo presupuesto
+            };
+
+            function verificarPresupuesto(tipoGasto, monto) {
+                if (presupuestos[tipoGasto] && monto > presupuestos[tipoGasto]) {
+                    showToast(`⚠️ Superaste el presupuesto de ${tipoGasto} ($${presupuestos[tipoGasto]})`, 'error');
+                    // Marcar la fila en la tabla:
+                    const rows = document.querySelectorAll("#purchasesBody tr");
+                    rows.forEach(row => {
+                        if (row.querySelector(".tipo-" + tipoGasto)) {
+                            row.classList.add("tipo-PresupuestoExcedido");
+                        }
+                    });
+                }
+            }
+
+            // Inicialización
+            document.addEventListener('DOMContentLoaded', function() {
+                initDB().then(() => {
+                    refreshPurchasesView();
+
+                    // Inicializar fecha actual en el campo de fecha
+                    const today = new Date();
+                    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+                    document.getElementById('fechaEmision').value = today.toISOString().slice(0, 10);
+                    
+                    // Configurar evento para el selector de datos
+                    document.getElementById('dataViewSelector').addEventListener('change', loadDataView);
+                    
+                    // Configurar evento para nuevo tipo de gasto
+                    document.getElementById('tipoGasto').addEventListener('change', function() {
+                        const nuevoTipoContainer = document.getElementById('nuevoTipoContainer');
+                        nuevoTipoContainer.style.display = this.value === 'nuevo' ? 'block' : 'none';
+                        if (this.value !== 'nuevo') {
+                            document.getElementById('nuevoTipo').value = ''; // Limpia el campo
+                        }
+                    });
+
+                }).catch(error => {
+                    console.error("Error al inicializar la base de datos:", error);
+                    showToast("⚠️ Error al inicializar la base de datos", 'error');
+                });
+            });
+            
+            // Cerrar modales al hacer clic fuera
+            window.onclick = function(event) {
+                if (event.target.className === 'modal') {
+                    event.target.style.display = 'none';
+                }
+            };
+        </script>
+    </div>
+</body>
+</html>
