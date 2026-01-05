@@ -386,6 +386,15 @@
         .tipo-Gas { background-color: #b39ddb; }
         .tipo-Netflix { background-color: #f48fb1; }
 	.tipo-TiendasRetail { background-color: #ffab91; } /* Naranja claro */
+	.tipo-PropinaMarce { background-color: #FFD700; } /* Dorado */
+.tipo-PropinaSebas { background-color: #32CD32; } /* Verde lima */
+.tipo-PropinaSami { background-color: #1E90FF; } /* Azul dodger */
+.tipo-Bancos { background-color: #8B4513; } /* Marrón */
+.tipo-EquiposTecnologicos { background-color: #4B0082; } /* Índigo */
+.tipo-JP { background-color: #FF1493; } /* Rosa fuerte */
+.tipo-Streaming { background-color: #FF1493; } /* Rosa fuerte */
+.tipo-Sueldo { background-color: #90EE90; } /* Verde claro */
+.tipo-TCJimmy { background-color: #FFB6C1; } /* Rosa claro */
         
         @media (min-width: 768px) {
             body {
@@ -500,11 +509,14 @@
     background-color: #f9f9f9;
 }
 
+.saldo-positivo { color: var(--success-color); }
+.saldo-negativo { color: var(--danger-color); }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏠 Gestión de Gastos del Hogar</h1>
+        <h1>🏠 Gastos JP</h1>
         
         <div class="button-group">
             <button onclick="openImportModal()" class="btn-secondary">📥 Importar Excel</button>
@@ -572,6 +584,21 @@
                     <div class="value" id="minExpenseStat">$0</div>
                 </div>
             </div>
+
+<div class="grid-3">
+    <div class="stat-card">
+        <h3>💰 Total Sueldo</h3>
+        <div class="value" id="totalSueldoStat">$0</div>
+    </div>
+    <div class="stat-card">
+        <h3>💳 Total TCJimmy</h3>
+        <div class="value" id="totalTCJimmyStat">$0</div>
+    </div>
+    <div class="stat-card">
+        <h3>💼 Saldo de Ingresos</h3>
+        <div class="value" id="saldoIngresosStat">$0</div>
+    </div>
+</div>
             
             <div class="grid-2">
                 <div class="chart-container">
@@ -647,13 +674,23 @@
                                 <option value="Cumpleaños">Cumpleaños</option>
                                 <option value="Salud">Salud</option>
                                 <option value="Colegio">Colegio</option>
-                                <!-- Nuevos tipos de gasto -->
+                              
                                 <option value="Panaderia">Panadería</option>
                                 <option value="Telefono">Teléfono</option>
                                 <option value="Carne">Carne</option>
                                 <option value="Gas">Gas</option>
                                 <option value="Netflix">Netflix</option>
 				<option value="TiendasRetail">Tiendas Retail</option>
+				<option value="PropinaMarce">Propina Marce</option>
+    <option value="PropinaSebas">Propina Sebas</option>
+    <option value="PropinaSami">Propina Sami</option>
+    <option value="Bancos">Bancos</option>
+    <option value="EquiposTecnologicos">Equipos Tecnológicos</option>
+    <option value="JP">JP</option>
+<option value="Streaming">Streaming</option>
+<option value="Sueldo">Sueldo</option>
+<option value="TCJimmy">TCJimmy</option>
+
                                 <!-- Opción para agregar nuevos tipos -->
                                 <option value="nuevo">➕ Agregar nuevo tipo</option>
                             </select>
@@ -1372,8 +1409,17 @@ function updateTopExpenses(period, specificDate = null) {
                                 'Carne': '#ef9a9a',
                                 'Gas': '#b39ddb',
                                 'Netflix': '#f48fb1',
-				 'TiendasRetail': '#ffab91' // Nueva categoría
-                            };
+				 'TiendasRetail': '#ffab91',
+ 'PropinaMarce': '#FFD700',
+    'PropinaSebas': '#32CD32',
+    'PropinaSami': '#1E90FF',
+    'Bancos': '#8B4513',
+    'EquiposTecnologicos': '#4B0082',
+'Streaming': '#4B0082',
+'Sueldo': '#90EE90',
+'TCJimmy': '#FFB6C1',
+    'JP': '#FF1493'
+};
                             return colorMap[label] || getRandomColor();
                         });
 
@@ -1392,23 +1438,32 @@ function updateTopExpenses(period, specificDate = null) {
             }
 
             function updateStats(period, specificDate = null) {
-                calculateStats(period, specificDate).then(({ 
-                    totalExpenses, 
-                    totalPurchases, 
-                    avgExpense,
-                    maxExpense,
-                    minExpense,
-                    uniqueCategories
-                }) => {
-                    document.getElementById('totalExpensesStat').textContent = `$${totalExpenses.toFixed(2)}`;
-                    document.getElementById('totalPurchasesStat').textContent = totalPurchases;
-                    document.getElementById('totalSuppliersStat').textContent = uniqueCategories;
-                    document.getElementById('avgExpenseStat').textContent = `$${avgExpense.toFixed(2)}`;
-                    document.getElementById('maxExpenseStat').textContent = `$${maxExpense.toFixed(2)}`;
-                    document.getElementById('minExpenseStat').textContent = `$${minExpense.toFixed(2)}`;
-                });
-            }
-
+    calculateStats(period, specificDate).then(({ 
+        totalExpenses, 
+        totalPurchases, 
+        avgExpense,
+        maxExpense,
+        minExpense,
+        uniqueCategories,
+        totalSueldo,      
+        totalTCJimmy,
+        saldoIngresos
+    }) => {
+        document.getElementById('totalExpensesStat').textContent = `$${totalExpenses.toFixed(2)}`;
+        document.getElementById('totalPurchasesStat').textContent = totalPurchases;
+        document.getElementById('totalSuppliersStat').textContent = uniqueCategories;
+        document.getElementById('avgExpenseStat').textContent = `$${avgExpense.toFixed(2)}`;
+        document.getElementById('maxExpenseStat').textContent = `$${maxExpense.toFixed(2)}`;
+        document.getElementById('minExpenseStat').textContent = `$${minExpense.toFixed(2)}`;
+        document.getElementById('totalSueldoStat').textContent = `$${totalSueldo.toFixed(2)}`;
+        document.getElementById('totalTCJimmyStat').textContent = `$${totalTCJimmy.toFixed(2)}`;
+        
+        // ESTAS LÍNEAS VAN AQUÍ ↓
+        const saldoElement = document.getElementById('saldoIngresosStat');
+        saldoElement.textContent = `$${saldoIngresos.toFixed(2)}`;
+        saldoElement.className = 'value ' + (saldoIngresos >= 0 ? 'saldo-positivo' : 'saldo-negativo');
+    });
+}
             function calculateStats(period, specificDate = null) {
                 return new Promise((resolve) => {
                     const now = specificDate || new Date();
@@ -1461,30 +1516,57 @@ function updateTopExpenses(period, specificDate = null) {
                             filteredPurchases = [...allPurchases];
                         }
                         
-                        // Cálculos estadísticos
-                        const totalExpenses = filteredPurchases.reduce((sum, p) => sum + parseFloat(p.monto), 0);
-                        const totalPurchases = filteredPurchases.length;
-                        const avgExpense = totalPurchases > 0 ? totalExpenses / totalPurchases : 0;
-                        
-                        // Encontrar gasto máximo y mínimo
-                        let maxExpense = 0;
-                        let minExpense = 0;
-                        if (filteredPurchases.length > 0) {
-                            maxExpense = Math.max(...filteredPurchases.map(p => parseFloat(p.monto)));
-                            minExpense = Math.min(...filteredPurchases.map(p => parseFloat(p.monto)));
-                        }
+// PRIMERO: Calcular totales para Sueldo y TCJimmy
+let totalSueldo = 0;
+let totalTCJimmy = 0;
+
+filteredPurchases.forEach(p => {
+    if (p.tipoGasto === 'Sueldo') {
+        totalSueldo += parseFloat(p.monto);
+    } else if (p.tipoGasto === 'TCJimmy') {
+        totalTCJimmy += parseFloat(p.monto);
+    }
+});
+
+// SEGUNDO: Sumar todos los gastos EXCLUYENDO "Sueldo"
+const totalExpenses = filteredPurchases.reduce((sum, p) => {
+    if (p.tipoGasto !== 'Sueldo') {
+        return sum + parseFloat(p.monto);
+    }
+    return sum;
+}, 0);
+
+// TERCERO: Cálculos estadísticos (mantener lo demás igual)
+const totalPurchases = filteredPurchases.length;
+const avgExpense = totalPurchases > 0 ? totalExpenses / totalPurchases : 0;
+
+// Encontrar gasto máximo y mínimo (excluyendo "Sueldo" también)
+let maxExpense = 0;
+let minExpense = 0;
+const gastosReales = filteredPurchases.filter(p => p.tipoGasto !== 'Sueldo');
+if (gastosReales.length > 0) {
+    maxExpense = Math.max(...gastosReales.map(p => parseFloat(p.monto)));
+    minExpense = Math.min(...gastosReales.map(p => parseFloat(p.monto)));
+}
+
                         
                         // Categorías únicas
                         const uniqueCategories = new Set(filteredPurchases.map(p => p.tipoGasto)).size;
                         
-                        resolve({ 
-                            totalExpenses, 
-                            totalPurchases, 
-                            avgExpense,
-                            maxExpense,
-                            minExpense,
-                            uniqueCategories
-                        });
+// Calcular el saldo de ingresos
+const saldoIngresos = totalSueldo - totalExpenses;
+
+resolve({ 
+    totalExpenses, 
+    totalPurchases, 
+    avgExpense,
+    maxExpense,
+    minExpense,
+    uniqueCategories,
+    totalSueldo,      
+    totalTCJimmy,
+    saldoIngresos
+});
                     };
                 });
             }
@@ -2729,6 +2811,10 @@ function updatePurchasesList(period, specificDate = null) {
                     event.target.style.display = 'none';
                 }
             };
+
+
+
+
         </script>
     </div>
 </body>
