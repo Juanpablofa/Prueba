@@ -1520,57 +1520,58 @@ function updateTopExpenses(period, specificDate = null) {
 let totalSueldo = 0;
 let totalTCJimmy = 0;
 
-filteredPurchases.forEach(p => {
-    if (p.tipoGasto === 'Sueldo') {
-        totalSueldo += parseFloat(p.monto);
-    } else if (p.tipoGasto === 'TCJimmy') {
-        totalTCJimmy += parseFloat(p.monto);
-    }
-});
+ filteredPurchases.forEach(p => {
+                if (p.tipoGasto === 'Sueldo') {
+                    totalSueldo += parseFloat(p.monto);
+                } else if (p.tipoGasto === 'TCJimmy') {
+                    totalTCJimmy += parseFloat(p.monto);
+                }
+            });
 
-// SEGUNDO: Sumar todos los gastos EXCLUYENDO "Sueldo"
-const totalExpenses = filteredPurchases.reduce((sum, p) => {
-    if (p.tipoGasto !== 'Sueldo') {
-        return sum + parseFloat(p.monto);
-    }
-    return sum;
-}, 0);
+ // Sumar todos los gastos EXCLUYENDO "Sueldo" y "TCJimmy"
+            const totalExpenses = filteredPurchases.reduce((sum, p) => {
+                if (p.tipoGasto !== 'Sueldo' && p.tipoGasto !== 'TCJimmy') {
+                    return sum + parseFloat(p.monto);
+                }
+                return sum;
+            }, 0);
+            
 
 // TERCERO: Cálculos estadísticos (mantener lo demás igual)
-const totalPurchases = filteredPurchases.length;
-const avgExpense = totalPurchases > 0 ? totalExpenses / totalPurchases : 0;
-
-// Encontrar gasto máximo y mínimo (excluyendo "Sueldo" también)
-let maxExpense = 0;
-let minExpense = 0;
-const gastosReales = filteredPurchases.filter(p => p.tipoGasto !== 'Sueldo');
-if (gastosReales.length > 0) {
-    maxExpense = Math.max(...gastosReales.map(p => parseFloat(p.monto)));
-    minExpense = Math.min(...gastosReales.map(p => parseFloat(p.monto)));
-}
-
-                        
-                        // Categorías únicas
-                        const uniqueCategories = new Set(filteredPurchases.map(p => p.tipoGasto)).size;
-                        
-// Calcular el saldo de ingresos
-const saldoIngresos = totalSueldo - totalExpenses;
-
-resolve({ 
-    totalExpenses, 
-    totalPurchases, 
-    avgExpense,
-    maxExpense,
-    minExpense,
-    uniqueCategories,
-    totalSueldo,      
-    totalTCJimmy,
-    saldoIngresos
-});
-                    };
-                });
+  const totalPurchases = filteredPurchases.length;
+            const avgExpense = totalPurchases > 0 ? totalExpenses / totalPurchases : 0;
+            
+            // Encontrar gasto máximo y mínimo (excluyendo "Sueldo" y "TCJimmy")
+            let maxExpense = 0;
+            let minExpense = 0;
+            const gastosReales = filteredPurchases.filter(p => 
+                p.tipoGasto !== 'Sueldo' && p.tipoGasto !== 'TCJimmy');
+            
+            if (gastosReales.length > 0) {
+                maxExpense = Math.max(...gastosReales.map(p => parseFloat(p.monto)));
+                minExpense = Math.min(...gastosReales.map(p => parseFloat(p.monto)));
             }
-
+            
+            // Categorías únicas
+            const uniqueCategories = new Set(filteredPurchases.map(p => p.tipoGasto)).size;
+            
+            // Calcular el saldo de ingresos
+            const saldoIngresos = totalSueldo - totalExpenses;
+            
+            resolve({ 
+                totalExpenses, 
+                totalPurchases, 
+                avgExpense,
+                maxExpense,
+                minExpense,
+                uniqueCategories,
+                totalSueldo,      
+                totalTCJimmy,
+                saldoIngresos
+            });
+        };
+    });
+}
             function updateTopCategories() {
                 const categoryStats = {};
                 
